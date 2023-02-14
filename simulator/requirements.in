@@ -1,0 +1,14 @@
+# Requirements needed for installing and using the package. Include
+# everything necessary to satisfy setup.py's install_requires section.
+fire
+pandas
+
+# Additional requirements needed for development.
+black
+flake8
+isort
+mypy
+pip-tools
+pre-commit
+pytest
+wheel

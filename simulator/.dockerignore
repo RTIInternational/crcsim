@@ -1,0 +1,11 @@
+**/.*
+!.flake8
+!.mypy.ini
+!.isort.cfg
+
+Dockerfile
+demos
+docs
+
+**/__pycache__
+**/*.egg-info
