@@ -48,11 +48,13 @@ def load_params(file):
         params = json.load(f)
 
     params["value_life_year"] = StepFunction(
-        x=params["value_life_year_ages"], y=params["value_life_year_dollars"],
+        x=params["value_life_year_ages"],
+        y=params["value_life_year_dollars"],
     )
 
     params["lesion_incidence"] = StepFunction(
-        x=params["lesion_incidence_ages"], y=params["lesion_incidence_rates"],
+        x=params["lesion_incidence_ages"],
+        y=params["lesion_incidence_rates"],
     )
 
     for sex in ("male", "female"):

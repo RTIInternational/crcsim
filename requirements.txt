@@ -5,21 +5,19 @@
 #    pip-compile
 #
 appdirs==1.4.4
-    # via
-    #   black
-    #   virtualenv
+    # via virtualenv
 attrs==19.3.0
-    # via
-    #   black
-    #   pytest
-black==19.10b0
+    # via pytest
+black==22.8.0
     # via -r requirements.in
 cfgv==3.1.0
     # via pre-commit
-click==7.1.2
+click==8.0.4
     # via
     #   black
     #   pip-tools
+dataclasses==0.8
+    # via black
 distlib==0.3.1
     # via virtualenv
 filelock==3.0.12
@@ -32,6 +30,7 @@ identify==1.4.25
     # via pre-commit
 importlib-metadata==1.7.0
     # via
+    #   click
     #   flake8
     #   pluggy
     #   pre-commit
@@ -48,7 +47,9 @@ mccabe==0.6.1
 more-itertools==8.4.0
     # via pytest
 mypy-extensions==0.4.3
-    # via mypy
+    # via
+    #   black
+    #   mypy
 mypy==0.812
     # via -r requirements.in
 nodeenv==1.4.0
@@ -59,10 +60,12 @@ packaging==20.4
     # via pytest
 pandas==1.1.0
     # via -r requirements.in
-pathspec==0.8.0
+pathspec==0.9.0
     # via black
 pip-tools==5.5.0
     # via -r requirements.in
+platformdirs==2.4.0
+    # via black
 pluggy==0.13.1
     # via pytest
 pre-commit==2.6.0
@@ -83,8 +86,6 @@ pytz==2020.1
     # via pandas
 pyyaml==5.3.1
     # via pre-commit
-regex==2020.7.14
-    # via black
 six==1.15.0
     # via
     #   fire
@@ -94,15 +95,17 @@ six==1.15.0
 termcolor==1.1.0
     # via fire
 toml==0.10.1
-    # via
-    #   black
-    #   pre-commit
-typed-ast==1.4.1
+    # via pre-commit
+tomli==1.2.3
+    # via black
+typed-ast==1.4.3
     # via
     #   black
     #   mypy
-typing-extensions==3.7.4.2
-    # via mypy
+typing-extensions==4.1.1
+    # via
+    #   black
+    #   mypy
 virtualenv==20.0.28
     # via pre-commit
 wcwidth==0.2.5
