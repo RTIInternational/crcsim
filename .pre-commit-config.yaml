@@ -1,0 +1,30 @@
+# Run isort and black before flake8, because isort and black might modify
+# files, and we want flake8 to run on the modified files.
+
+repos:
+  - repo: local
+    hooks:
+      - id: isort
+        name: sort imports
+        entry: isort .
+        pass_filenames: false
+        language: system
+        types: [python]
+      - id: black
+        name: black
+        entry: black .
+        pass_filenames: false
+        language: system
+        types: [python]
+      - id: flake8
+        name: flake8
+        entry: flake8 .
+        pass_filenames: false
+        language: system
+        types: [python]
+      - id: mypy
+        name: mypy
+        entry: mypy .
+        pass_filenames: false
+        language: system
+        types: [python]

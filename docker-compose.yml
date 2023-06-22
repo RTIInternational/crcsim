@@ -1,0 +1,21 @@
+version: "3.7"
+
+services:
+  sim:
+    build: ./
+
+    # See comments in .gitlab-ci.yml about the `user` field.
+    user: "${RUN_AS_USER:-}"
+
+    # Given that we're supporting the Docker setup only in CI, we shouldn't
+    # really need to bind-mount the source directory into the /code directory.
+    # Copying the contents into the image should be sufficient. However,
+    # bind-mounting into /code ensures that /code is owned by the RUN_AS_USER
+    # instead of by root. This is important because some of our tests assume
+    # they can create files in /code.
+    volumes:
+      - type: bind
+        source: ./
+        target: /code
+
+    working_dir: /code

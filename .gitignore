@@ -1,0 +1,37 @@
+prep/output/
+
+# default output file names
+simulator/output.csv
+
+# default output file names in the main model
+main_model/summary_replication.tsv
+main_model/summary_year.tsv
+main_model/summary_state.tsv
+
+# default output file names in the risk model
+risk_model/risk.tsv
+risk_model/state_trace.tsv
+risk_model/matrix.tsv
+
+modelutils/build/
+modelutils/dist/
+
+# Artifacts like JAR files and input populations that are shared across
+# experiments.
+experiments/shared/
+
+
+#-------------------------------------------------------------------------------
+# For Python development.
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+.ipynb_checkpoints/
+
+*.egg-info/
+
+# Other project-specific files
+.DS_Store
