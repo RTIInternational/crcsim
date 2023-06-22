@@ -901,7 +901,8 @@ class Person:
             if rand < cumulative_distribution:
                 self.routine_test = test
                 self.out.add_routine_test_chosen(
-                    person_id=self.id, test_name=test,
+                    person_id=self.id,
+                    test_name=test,
                 )
                 break
 
@@ -1072,7 +1073,8 @@ class Person:
             delay=self.expected_lifespan,
         )
         self.out.add_expected_lifespan(
-            person_id=self.id, time=self.expected_lifespan,
+            person_id=self.id,
+            time=self.expected_lifespan,
         )
 
     def test_diagnostic(self):
@@ -1125,7 +1127,9 @@ class Person:
                             time=self.scheduler.time,
                         )
                         self.out.add_polypectomy(
-                            person_id=self.id, role=role, time=self.scheduler.time,
+                            person_id=self.id,
+                            role=role,
+                            time=self.scheduler.time,
                         )
                         if (
                             self.rng.random()
@@ -1201,7 +1205,9 @@ class Person:
                     # also check if the polypectomy was lethal.
                     if num_detected_polyps > 0:
                         self.out.add_polypectomy(
-                            person_id=self.id, role=role, time=self.scheduler.time,
+                            person_id=self.id,
+                            role=role,
+                            time=self.scheduler.time,
                         )
                         if (
                             self.rng.random()
@@ -1564,14 +1570,18 @@ class Person:
 
         if self.num_ongoing_treatments < self.params["max_ongoing_treatments"]:
             self.ongoing_treatment_event = self.scheduler.add_event(
-                message=message, handler=self.handle_ongoing_treatment, delay=1,
+                message=message,
+                handler=self.handle_ongoing_treatment,
+                delay=1,
             )
 
     def handle_yearly_actions(self, message="Conduct yearly actions"):
         self.do_tests()
 
         self.scheduler.add_event(
-            message=message, delay=1, handler=self.handle_yearly_actions,
+            message=message,
+            delay=1,
+            handler=self.handle_yearly_actions,
         )
 
     def do_tests(self):

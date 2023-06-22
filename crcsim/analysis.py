@@ -1208,7 +1208,9 @@ def get_screening_cost(
 
 
 def run(
-    params_file="parameters.json", outfile="output.csv", analysis_file="results.csv",
+    params_file="parameters.json",
+    outfile="output.csv",
+    analysis_file="results.csv",
 ):
     params = load_params(params_file)
 
