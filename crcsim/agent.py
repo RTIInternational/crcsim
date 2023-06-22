@@ -1705,7 +1705,6 @@ class Person:
 
 
 class Lesion:
-
     id_generator = itertools.count()
 
     def __init__(self, params, scheduler, person, rng, out):

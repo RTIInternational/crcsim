@@ -18,7 +18,6 @@ def run(
     cohort_file="cohort.csv",
     debug=False,
 ):
-
     if debug:
         logging.basicConfig(format="%(message)s", level=logging.DEBUG)
 
