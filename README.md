@@ -12,7 +12,6 @@ See [docs/design.md](./docs/design.md) for a discussion of the package's design.
 
 To set up a Python development environment for `crcsim`:
 
-1. From the repo root, `cd simulator`.
 1. Create a Python virtual environment based on Python 3.6. (Currently, support is limited to Python 3.6, because that is the version installed on the RTI Cluster, which is where we expect to deploy and run the experiments.)
 1. Activate the virtual environment.
 1. Install development dependencies with `pip install -r requirements.txt`.
@@ -37,8 +36,6 @@ A [pre-commit](https://pre-commit.com) configuration is provided for running som
 
 Enabling this is optional but encouraged because it's more convenient than remembering to do it manually. To enable, run `pre-commit install` inside your activated virtual environment. After that, you will be prevented from committing your changes if any of the tests fail. If for some reason you really need to commit changes despite failing checks, run `git commit --no-verify`.
 
-**NOTE:** The pre-commit hooks might fail to run if you're trying to commit files from the `simulator` directory while a different virtual environment is activated. For example, perhaps you've activated the data-prep virtual environment or one of the experiments' virtual environments. It's a somewhat unlikely scenario but good to be aware of. If this happens, you should activate your simulator virtual environment and try committing again.
-
 ### Managing dependencies
 
 Because `crcsim` is a package intended to be installed by other applications (namely our model experiments), its own dependencies defined in `setup.py` should be as unconstrained as possible. The other applications are responsible for pinning package versions when using `crcsim`.
@@ -47,7 +44,7 @@ For the purposes of developing `crcsim` and running its tests, though, we pin al
 
 To add or remove a package dependency :
 
-1. Edit [simulator/requirements.in](./requirements.in). If the dependency is a package dependency (that is, a dependency needed for installing and using `crcsim` and not simply for development and testing), **additionally** edit the `install_requires` section in [setup.py](./setup.py).
+1. Edit [requirements.in](./requirements.in). If the dependency is a package dependency (that is, a dependency needed for installing and using `crcsim` and not simply for development and testing), **additionally** edit the `install_requires` section in [setup.py](./setup.py).
 1. Run `pip-compile` to generate a new version of [requirements.txt](./requirements.txt).
 1. Run `pip-sync` to apply any changes to your virtual environment.
 1. Re-install `crcsim` into your virtual environment with `pip install -e .` (because `pip-sync` uninstalls it).
@@ -62,9 +59,10 @@ To upgrade a dependency:
 
 ## Running experiments
 
-An experiment uses the `crcsim` package to test a hypothesis by comparing results under different parameter values. We haven't completely settled on the location where we'll store our experiments, so for now you may find them in one of two locations:
+An experiment uses the `crcsim` package to test a hypothesis by comparing results under different parameter values. Experiments are stored as branches named `exp-{experiment_name}`. Experiment files are stored in the [crcsim/experiment/] directory.
 
-- In a subdirectory of the [experiments/](./experiments) directory, committed to the `main` repo branch.
-- In the [simulator/crcsim/experiment/] directory, committed to a branch named `exp-{experiment_name}`.
+To run an experiment, check out the experiment branch and follow instructions in [crcsim/experiment/README.md]. 
 
-See the READMEs in those locations for details on any specific experiment.
+To create a new experiment, check out a new branch and edit/add files in [crcsim/experiment/] as needed.
+
+By default, experiements should not be merged into `main`. We may merge an experiment into `main` to make a release tied to a paper.
