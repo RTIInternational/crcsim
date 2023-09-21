@@ -1,5 +1,7 @@
 # CRC model simulator
 
+The colorectal cancer (CRC) screening model is designed to examine the impacts of screening strategies and patient compliance on CRC outcomes like mortality rate.
+
 `crcsim` is a Python package implementing the CRC screening model simulation. This package isn't expected to be deployed and executed on its own. Instead, it's expected to be installed as a dependency of an experiment.
 
 ## Documentation
@@ -21,7 +23,9 @@ Note that although a Docker setup is provided, it's designed to be used only for
 
 ### Running tests
 
-Tests are run automatically as part of GitLab's continuous integration process using Docker. However, you can also run them locally with `./run_tests.sh`, or you can mimic the CI process by running them in Docker with:
+**TODO: since open sourcing the model, only formatting and linting tests run in CI. We need to start running unit tests too.**
+
+Tests are run automatically as part of GitHub's continuous integration process using Docker. However, you can also run them locally with `./run_tests.sh`, or you can mimic the CI process by running them in Docker with:
 
  ```
 $ docker-compose build
