@@ -1,0 +1,10 @@
+# Clone the specific commit of the model that you want to use for the experiment
+git+http://cds-mallard-web.rti.org/crcsim/crc-screening-sim@0e53795db26fa64c9e72a2f8503ef1c5392c9e72#egg=crcsim
+fire
+pandas
+openpyxl==3.0.9
+wheel
+matplotlib
+s3fs==0.5.1 # fix backward compatibility issue with new version of s3fs and fsspec
+fsspec==0.8.3 # fix backward compatibility issue with new version of s3fs and fsspec
+aiobotocore[awscli,boto3]

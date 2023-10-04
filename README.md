@@ -25,7 +25,7 @@ Note that although a Docker setup is provided, it's designed to be used only for
 
 **TODO: since open sourcing the model, only formatting and linting tests run in CI. We need to start running unit tests too.**
 
-Tests are run automatically as part of GitHub's continuous integration process using Docker. However, you can also run them locally with `./run_tests.sh`, or you can mimic the CI process by running them in Docker with:
+Testsa are run automatically as part of GitHub's continuous integration process using Docker. However, you can also run them locally with `./run_tests.sh`, or you can mimic the CI process by running them in Docker with:
 
  ```
 $ docker-compose build
