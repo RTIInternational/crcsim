@@ -37,3 +37,4 @@ __pycache__/
 .DS_Store
 .vscode
 output.csv
+results.csv

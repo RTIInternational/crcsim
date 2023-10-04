@@ -14,7 +14,7 @@ See [docs/design.md](./docs/design.md) for a discussion of the package's design.
 
 To set up a Python development environment for `crcsim`:
 
-1. Create a Python virtual environment based on Python 3.6. (Currently, support is limited to Python 3.6, because that is the version installed on the RTI Cluster, which is where we expect to deploy and run the experiments.)
+1. Create a Python virtual environment based on Python 3.11.
 1. Activate the virtual environment.
 1. Install development dependencies with `pip install -r requirements.txt`.
 1. Install `crcsim` with `pip install -e .`. The `-e` option specifies "development" mode, meaning that any changes you make to the code are recognized immediately without having to reinstall the package.
