@@ -1,6 +1,4 @@
-# Because Python 3.6 is installed on our target platform, use 3.6 for the Docker
-# image.
-FROM python:3.6.5-stretch
+FROM python:3.11.6-bullseye
 
 WORKDIR /code
 

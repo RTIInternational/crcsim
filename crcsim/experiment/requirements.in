@@ -1,7 +1,8 @@
 # Clone the specific commit of the model that you want to use for the experiment
-git+http://cds-mallard-web.rti.org/crcsim/crc-screening-sim@0e53795db26fa64c9e72a2f8503ef1c5392c9e72#egg=crcsim
+git+https://github.com/RTIInternational/crcsim.git@10211220d1f38239ac5ec885d00ca7a515449399
+
 fire
-pandas
+pandas==2.1.1
 openpyxl==3.0.9
 wheel
 matplotlib

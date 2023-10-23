@@ -34,7 +34,7 @@ If you want to conduct a test run of the experiment, consider reducing the numbe
 
 1. Clone this repo to your local machine
 1. Set your working directory to `./simulator/crcsim/experiment`
-1. Create and activate a Python 3.6 virtual environment (NOTE: Python 3.6 is not strictly necessary for running the experiment on AWS, but we recommend it because all development of the experiment and `crcsim` package took place in 3.6. Later versions of Python are probably okay but untested.)
+1. Create and activate a Python 3.11 virtual environment
 1. Install dependencies with `pip install -r requirements.txt`
 
 ### 2. (Optional) Build and Push Image
