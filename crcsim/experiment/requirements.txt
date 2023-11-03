@@ -4,12 +4,14 @@
 #
 #    pip-compile
 #
-aiobotocore[awscli,boto3]==2.6.0
+aiobotocore[awscli,boto3]==2.7.0
     # via
     #   -r requirements.in
     #   s3fs
 aiohttp==3.8.5
-    # via aiobotocore
+    # via
+    #   aiobotocore
+    #   s3fs
 aioitertools==0.11.0
     # via aiobotocore
 aiosignal==1.3.1
@@ -52,7 +54,7 @@ frozenlist==1.4.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==0.8.3
+fsspec==2023.10.0
     # via
     #   -r requirements.in
     #   s3fs
@@ -100,7 +102,7 @@ pyyaml==6.0.1
     # via awscli
 rsa==4.7.2
     # via awscli
-s3fs==0.5.1
+s3fs==2023.10.0
     # via -r requirements.in
 s3transfer==0.6.2
     # via
