@@ -1,12 +1,14 @@
-# Experiment Template
+# Replication of latest model runs on Implenomics AWS assets
 
-On the `experiment` branch, the files in `crcsim/experiment` provide a template for the experiment structure. New experiments can branch off this branch as a starting point.
+This experiment is intended to ensure that everything is running the same now that we are using Implenomics' AWS account instead of RTI's.
+
+In the process of that transition, we also upgraded CRCsim to run on Python 3.11 and Pandas 2.*. This experiment will also ensure that we didn't introduce any unexpected changes.
 
 ## Scenarios
 
-Experiments are structured as a set of scenarios. Each scenario is defined by a set of parameters. The scenarios that make up an experiment (and the parameters that define them) are determined by the hypothesis that the experiment intends to test.
+We will replicate the final set of scenarios from the 2022 calibration.
 
-This experiment template includes three scenarios:
+This experiment includes six scenarios. For each of the following three, we run the scenario with the baseline legion_risk_alpha and the IRR of 1.19.
 1. No screening
 2. 100% screening using colonoscopy
 3. 100% screening using FIT
@@ -55,7 +57,7 @@ The subdirectories and files in `scenarios/` must be uploaded to AWS S3 for the 
 
 To upload the files to S3, run
 ```
-aws s3 cp ./scenarios s3://crcsim-exp-template/scenarios --recursive
+aws s3 cp ./scenarios s3://crcsim-exp-replicate-on-impl-aws/scenarios --recursive
 ```
 *(Another note: this manual step is necessary because `boto3` does not include functionality to upload a directory to S3 recursively. Future experiments could improve this workflow by writing a function to upload the directory recursively in `prepare.py`. Or submit a patch to resolve https://github.com/boto/boto3/issues/358)*
 

@@ -1,5 +1,6 @@
 import json
 import random
+from copy import deepcopy
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
@@ -86,10 +87,10 @@ def transform_initial_compliance(rate) -> Callable:
     return transform
 
 
-def transform_FIT_routine_ages(age: int) -> Callable:
+def transform_routine_ages(test: str, start_age: int, end_age: int) -> Callable:
     def transform(params):
-        for p in ["routine_start", "routine_end"]:
-            params["tests"]["FIT"][p] = age
+        params["tests"][test]["routine_start"] = start_age
+        params["tests"][test]["routine_end"] = end_age
 
     return transform
 
@@ -97,6 +98,13 @@ def transform_FIT_routine_ages(age: int) -> Callable:
 def transform_routine_test_proportion(test: str, proportion: float) -> Callable:
     def transform(params):
         params["tests"][test]["proportion"] = proportion
+
+    return transform
+
+
+def transform_lesion_risk_alpha(IRR: float) -> Callable:
+    def transform(params):
+        params["lesion_risk_alpha"] = params["lesion_risk_alpha"] * IRR
 
     return transform
 
@@ -111,7 +119,7 @@ def create_scenarios() -> List:
     # that simulation time will always be greater than routine end, so no routine
     # testing will ever be performed.
     no_screening = Scenario(name="no_screening", params=get_default_params()).transform(
-        transform_FIT_routine_ages(-1)
+        transform_routine_ages("FIT", -1, -1)
     )
     scenarios.append(no_screening)
 
@@ -129,6 +137,31 @@ def create_scenarios() -> List:
     all_colonoscopy.transform(transform_routine_test_proportion("FIT", 0.0))
     all_colonoscopy.transform(transform_routine_test_proportion("Colonoscopy", 1.0))
     scenarios.append(all_colonoscopy)
+
+    # Start screening age at 45
+    all_fit_45 = deepcopy(all_fit).transform(transform_routine_ages("FIT", 45, 75))
+    all_fit_45.name = "all_FIT_start_45"
+    scenarios.append(all_fit_45)
+
+    all_colonoscopy_45 = deepcopy(all_colonoscopy).transform(
+        transform_routine_ages("Colonoscopy", 45, 75)
+    )
+    all_colonoscopy_45.name = "all_colonoscopy_start_45"
+    scenarios.append(all_colonoscopy_45)
+
+    # Each scenario with IRR of 1.19
+    for scenario in [
+        no_screening,
+        all_fit,
+        all_colonoscopy,
+        all_fit_45,
+        all_colonoscopy_45,
+    ]:
+        scenario_IRR = deepcopy(scenario).transform(
+            transform_lesion_risk_alpha(IRR=1.19)
+        )
+        scenario_IRR.name = f"{scenario.name}_IRR"
+        scenarios.append(scenario_IRR)
 
     return scenarios
 

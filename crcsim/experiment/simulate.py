@@ -38,7 +38,6 @@ def run(
     n_people: int = 100_000,
     job_queue: str = "crcsim",
     job_definition: str = "crcsim:3",
-    username: str = "apreiss",
 ):
     scenarios = get_scenario_list()
     seeds = get_seed_list()
@@ -59,12 +58,6 @@ def run(
                     "seed": seed,
                     "scenario": scenario,
                 },
-                # propagateTags=True,
-                # tags={
-                #     "project_number": "0216648.001.001",
-                #     "project_name": "crcsim",
-                #     "responsible_person": f"{username}@rti.org",
-                # },
             )
             print(
                 f"Submitting iteration {iteration_name} for scenario {scenario}, Job ID {job['jobId']}"
