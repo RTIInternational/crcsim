@@ -72,14 +72,16 @@ def combine_run_results() -> pd.DataFrame:
                 f"s3://{S3_BUCKET_NAME}/scenarios/{scenario}/results_{iteration_name}.csv"
             )
             df["scenario"] = scenario
-            df["iteration"] = iteration_name
+            df["iteration"] = iteration
 
             dfs.append(df)
 
     if len(dfs) == 0:
         raise RuntimeError("No simulation results files were found")
 
-    return pd.concat(dfs, axis="index")
+    return pd.concat(
+        dfs, axis="index"
+    ).copy()  # copy to address pandas fragmentation warning
 
 
 def add_derived_variables(df: pd.DataFrame) -> pd.DataFrame:
@@ -121,7 +123,6 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
     Compute the mean and standard deviation of every analysis variable, by
     scenario.
     """
-
     groups = df.groupby("scenario")
     means = groups.mean()
     stds = groups.std()
