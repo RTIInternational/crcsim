@@ -1,17 +1,15 @@
-# Experiment Template
+# Replication of the CRCCP intervention scenarios
 
-On the `experiment` branch, the files in `crcsim/experiment` provide a template for the experiment structure. New experiments can branch off this branch as a starting point.
+This experiment is a replication of the CRCCP compliance intervention experiment, which was conducted prior to open-sourcing the model and making some changes to the AWS infrastructure. We are replicating this experiment to ensure continuity after those changes.
 
+The CRCCP compliance intervention experiment examines the cost-effectiveness of interventions designed to improve compliance with routine screening.
+
+The experiment is designed around 8 health centers (labeled FHQC1-FHQC8), each having its own baseline compliance rate, intervention cost, and post-intervention compliance rate.
+
+We don't model the intervention explicitly. In other words, we didn't add any code to the model to implement the intervention. Instead, we model the intervention by assuming it leads to a change in the compliance rate, and so we run a pair of simulations: one using the baseline compliance rate and another using the post-intervention compliance rate. Any differences in outcomes can therefore be attributed to the intervention.
 ## Scenarios
 
-Experiments are structured as a set of scenarios. Each scenario is defined by a set of parameters. The scenarios that make up an experiment (and the parameters that define them) are determined by the hypothesis that the experiment intends to test.
-
-This experiment template includes three scenarios:
-1. No screening
-2. 100% screening using colonoscopy
-3. 100% screening using FIT
-
-More complex production experiments might vary screening rates, compliance rates, costs, and other parameters.
+Includes 2 scenarios per health center: one baseline scenario and one intervention scenario. The baseline scenarios are based on real data and the intervention scenarios include a hypothetical increase in screening compliance rates.
 
 The scenarios are created by `prepare.py`. This script reads a set of base parameters defined in `crcsim/experiment/parameters.json`, modifies them to create the scenarios, and saves them in a directory structure that will eventually be copied to AWS.
 
@@ -55,7 +53,7 @@ The subdirectories and files in `scenarios/` must be uploaded to AWS S3 for the 
 
 To upload the files to S3, run
 ```
-aws s3 cp ./scenarios s3://crcsim-exp-template/scenarios --recursive
+aws s3 cp ./scenarios s3://crcsim-exp-crccp-replication/scenarios --recursive
 ```
 *(Another note: this manual step is necessary because `boto3` does not include functionality to upload a directory to S3 recursively. Future experiments could improve this workflow by writing a function to upload the directory recursively in `prepare.py`. Or submit a patch to resolve https://github.com/boto/boto3/issues/358)*
 
