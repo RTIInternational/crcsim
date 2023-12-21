@@ -2,6 +2,7 @@ import json
 import random
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
+from copy import copy
 
 import fire
 
@@ -86,6 +87,18 @@ def transform_initial_compliance(rate) -> Callable:
     return transform
 
 
+def transform_treatment_cost(stage: str, phase: str, value: int) -> Callable:
+    def transform(params):
+        params[f"cost_treatment_stage{stage}_{phase}"] = value
+
+    return transform
+
+
+# TODO: add transform function to handle lowered repeat compliance
+
+# TODO: add transform function to handle lowered diagnostic compliance
+
+
 def create_scenarios() -> List:
     # For each health center, define the initial compliance rate in the baseline
     # scenario and the implementation scenario.
@@ -99,6 +112,8 @@ def create_scenarios() -> List:
         "fqhc7": (0.257, 0.354),
         "fqhc8": (0.190, 0.390),
     }
+    low_initial_stage_3_treatment_cost = 67_300
+    low_initial_stage_4_treatment_cost = 97_931
 
     scenarios = []
 
@@ -112,6 +127,31 @@ def create_scenarios() -> List:
             name=f"{fqhc}_implementation", params=get_default_params()
         ).transform(transform_initial_compliance(rates[1]))
         scenarios.append(implementation)
+
+        # TODO: Sensitivity Analysis 1.  Lower repeat compliance (note that the baseline runs stay the same)
+        ...
+
+        # Sensitivity analysis 2. Lower cost for stage III and stage IV initial phase
+        baseline_low_cost = copy(baseline)
+        baseline_low_cost.transform(
+            transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
+        ).transform(
+            transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
+        )
+        baseline_low_cost.name = f"{fqhc}_baseline_low_initial_treat_cost"
+        scenarios.append(baseline_low_cost)
+
+        implementation_low_cost = copy(implementation)
+        implementation_low_cost.transform(
+            transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
+        ).transform(
+            transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
+        )
+        implementation_low_cost.name = f"{fqhc}_implementation_low_initial_treat_cost"
+        scenarios.append(implementation_low_cost)
+
+        # TODO: Sensitivity analysis 3. Lower ccompliance with diagnostic colonoscopy
+        ...
 
     return scenarios
 
