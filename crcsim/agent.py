@@ -591,7 +591,7 @@ class Person:
         elif self.testing_state == PersonTestingState.ROUTINE:
             if message == PersonTestingMessage.SYMPTOMATIC:
                 self.testing_state = PersonTestingState.DIAGNOSTIC
-                self.test_diagnostic()
+                self.test_diagnostic(symptomatic=True)
             elif message == PersonTestingMessage.SCREEN_POSITIVE:
                 self.testing_state = PersonTestingState.DIAGNOSTIC
                 self.test_diagnostic()
@@ -630,7 +630,7 @@ class Person:
                 self.testing_transition_timeout_event.enabled = False
 
                 self.testing_state = PersonTestingState.DIAGNOSTIC
-                self.test_diagnostic()
+                self.test_diagnostic(symptomatic=True)
             elif message == PersonTestingMessage.RETURN_TO_ROUTINE:
                 # When exiting a state with a timeout transition, always disable the
                 # timeout event to avoid acting on stale messages.
@@ -642,7 +642,7 @@ class Person:
         elif self.testing_state == PersonTestingState.SURVEILLANCE:
             if message == PersonTestingMessage.SYMPTOMATIC:
                 self.testing_state = PersonTestingState.SURVEILLANCE
-                self.test_surveillance()
+                self.test_surveillance(symptomatic=True)
             elif message == PersonTestingMessage.POSITIVE_POLYP:
                 self.testing_state = PersonTestingState.SURVEILLANCE
                 self.num_surveillance_tests_since_positive = 0
@@ -1077,7 +1077,7 @@ class Person:
             time=self.expected_lifespan,
         )
 
-    def test_diagnostic(self):
+    def test_diagnostic(self, symptomatic: bool = False):
         if (
             self.testing_state == PersonTestingState.DIAGNOSTIC
             and self.disease_state
@@ -1094,7 +1094,7 @@ class Person:
                 if self.routine_is_diagnostic
                 else TestingRole.DIAGNOSTIC
             )
-            if self.is_compliant(test=self.diagnostic_test):
+            if self.is_compliant(test=self.diagnostic_test) or symptomatic is True:
                 test_params = self.params["tests"][self.diagnostic_test]
 
                 self.out.add_test_performed(
@@ -1352,12 +1352,12 @@ class Person:
                         time=self.scheduler.time,
                     )
 
-    def test_surveillance(self):
+    def test_surveillance(self, symptomatic: bool = False):
         if (
             self.testing_state == PersonTestingState.SURVEILLANCE
             and self.disease_state != PersonDiseaseState.DEAD
         ):
-            if self.is_compliant(test=self.surveillance_test):
+            if self.is_compliant(test=self.surveillance_test) or symptomatic is True:
                 test_params = self.params["tests"][self.surveillance_test]
 
                 self.out.add_test_performed(
