@@ -679,7 +679,7 @@ class Analysis:
         stage_counts = clinical_detections.new_state.value_counts()
         stage_counts.index = stage_counts.index.str.replace("CLINICAL_", "").str.lower()
         onset_distrib = stage_counts / len(clinical_detections)
-        for stage, value in onset_distrib.iteritems():
+        for stage, value in onset_distrib.items():
             replication_output_row[f"crc_onset_proportion_{stage}"] = value
 
         # Among all individuals who died from CRC, mean time between the onset of CRC
@@ -779,7 +779,7 @@ class Analysis:
                     f"Unexpected: more than one death event for person {p}"
                 )
             else:
-                death_age = int(death.time)
+                death_age = int(death.time.iloc[0])
 
             alive = np.arange(max_age + 1)
             alive = np.where(alive > death_age, 0, 1)
@@ -906,11 +906,11 @@ class Analysis:
                         f"Unexpected: more than one clinical onset event for person {p}"
                     )
                 # Clinical onset overall
-                clinical_detection_age = int(clinical_detection.time)
+                clinical_detection_age = int(clinical_detection.time.iloc[0])
                 clinical_onset[clinical_detection_age] = 1
                 # Five-year survival overall
-                clinical_detection_age_decimal = float(clinical_detection.time)
-                death_age_decimal = float(death.time)
+                clinical_detection_age_decimal = float(clinical_detection.time.iloc[0])
+                death_age_decimal = float(death.time.iloc[0])
                 crc_onset_to_death = death_age_decimal - clinical_detection_age_decimal
                 if crc_onset_to_death > 5:
                     five_year_survival[clinical_detection_age] = 1
