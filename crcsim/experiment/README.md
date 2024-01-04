@@ -53,7 +53,7 @@ The subdirectories and files in `scenarios/` must be uploaded to AWS S3 for the 
 
 To upload the files to S3, run
 ```
-aws s3 cp ./scenarios s3://crcsim-exp-crccp-replication/scenarios --recursive
+aws s3 cp ./scenarios s3://crcsim-exp-crccp-sensitivity01/scenarios --recursive
 ```
 *(Another note: this manual step is necessary because `boto3` does not include functionality to upload a directory to S3 recursively. Future experiments could improve this workflow by writing a function to upload the directory recursively in `prepare.py`. Or submit a patch to resolve https://github.com/boto/boto3/issues/358)*
 
