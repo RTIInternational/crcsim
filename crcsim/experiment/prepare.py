@@ -2,7 +2,7 @@ import json
 import random
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
-from copy import copy
+from copy import deepcopy
 
 import fire
 
@@ -100,15 +100,19 @@ def transform_repeat_compliance(rate: float, test: str) -> Callable:
         params["tests"][test]["compliance_rate_given_prev_compliant"] = [
             rate for _ in params["tests"][test]["compliance_rate_given_prev_compliant"]
         ]
+
     return transform
 
+
 # TODO: add transform function to handle lowered diagnostic compliance
+
 
 def transform_diagnostic_compliance(rate) -> Callable:
     def transform(params):
         params["diagnostic_compliance_rate"] = rate
 
     return transform
+
 
 def create_scenarios() -> List:
     # For each health center, define the initial compliance rate in the baseline
@@ -125,8 +129,8 @@ def create_scenarios() -> List:
     }
     low_initial_stage_3_treatment_cost = 67_300
     low_initial_stage_4_treatment_cost = 97_931
-    diagnostic_compliance_rate= 0.525
-    lower_repeat_compliance=0.8
+    diagnostic_compliance_rate = 0.525
+    lower_repeat_compliance = 0.8
     scenarios = []
 
     for fqhc, rates in initial_compliance.items():
@@ -141,17 +145,19 @@ def create_scenarios() -> List:
         scenarios.append(implementation)
 
         # TODO: Sensitivity Analysis 1.  Lower repeat compliance (note that the baseline runs stay the same)
-       
+
         test_name = "FIT"
-        implementation_lower_repeat_compliance = copy(implementation)
+        implementation_lower_repeat_compliance = deepcopy(implementation)
         implementation_lower_repeat_compliance.transform(
             transform_repeat_compliance(lower_repeat_compliance, test_name)
         )
-        implementation_lower_repeat_compliance.name = f"{fqhc}_implementation_lower_repeat_compliance"
+        implementation_lower_repeat_compliance.name = (
+            f"{fqhc}_implementation_lower_repeat_compliance"
+        )
         scenarios.append(implementation_lower_repeat_compliance)
 
         # Sensitivity analysis 2. Lower cost for stage III and stage IV initial phase
-        baseline_low_cost = copy(baseline)
+        baseline_low_cost = deepcopy(baseline)
         baseline_low_cost.transform(
             transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
         ).transform(
@@ -160,7 +166,7 @@ def create_scenarios() -> List:
         baseline_low_cost.name = f"{fqhc}_baseline_low_initial_treat_cost"
         scenarios.append(baseline_low_cost)
 
-        implementation_low_cost = copy(implementation)
+        implementation_low_cost = deepcopy(implementation)
         implementation_low_cost.transform(
             transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
         ).transform(
@@ -170,18 +176,20 @@ def create_scenarios() -> List:
         scenarios.append(implementation_low_cost)
 
         # TODO: Sensitivity analysis 3. Lower compliance with diagnostic colonoscopy
-        baseline_lower_compliance = copy(baseline)
+        baseline_lower_compliance = deepcopy(baseline)
         baseline_lower_compliance.transform(
             transform_diagnostic_compliance(diagnostic_compliance_rate)
         )
         baseline_lower_compliance.name = f"{fqhc}_baseline_lower_diagnostic_compliance"
         scenarios.append(baseline_lower_compliance)
 
-        implementation_lower_compliance = copy(implementation)
+        implementation_lower_compliance = deepcopy(implementation)
         implementation_lower_compliance.transform(
             transform_diagnostic_compliance(diagnostic_compliance_rate)
         )
-        implementation_lower_compliance.name = f"{fqhc}_implementation_lower_diagnostic_compliance"
+        implementation_lower_compliance.name = (
+            f"{fqhc}_implementation_lower_diagnostic_compliance"
+        )
         scenarios.append(implementation_lower_compliance)
 
     return scenarios
