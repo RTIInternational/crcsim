@@ -94,7 +94,6 @@ def transform_treatment_cost(stage: str, phase: str, value: int) -> Callable:
     return transform
 
 
-# TODO: add transform function to handle lowered repeat compliance
 def transform_repeat_compliance(rate: float, test: str) -> Callable:
     def transform(params):
         params["tests"][test]["compliance_rate_given_prev_compliant"] = [
@@ -104,12 +103,23 @@ def transform_repeat_compliance(rate: float, test: str) -> Callable:
     return transform
 
 
-# TODO: add transform function to handle lowered diagnostic compliance
-
-
 def transform_diagnostic_compliance(rate) -> Callable:
     def transform(params):
         params["diagnostic_compliance_rate"] = rate
+
+    return transform
+
+
+def transform_surveillance_frequency(stage: str, frequency: int) -> Callable:
+    def transform(params):
+        params[f"surveillance_freq_{stage}"] = frequency
+
+    return transform
+
+
+def transform_surveillance_end_age(age: int) -> Callable:
+    def transform(params):
+        params["surveillance_end_age"] = age
 
     return transform
 
@@ -144,7 +154,7 @@ def create_scenarios() -> List:
         ).transform(transform_initial_compliance(rates[1]))
         scenarios.append(implementation)
 
-        # TODO: Sensitivity Analysis 1.  Lower repeat compliance (note that the baseline runs stay the same)
+        # Sensitivity Analysis 1.  Lower repeat compliance (note that the baseline runs stay the same)
 
         test_name = "FIT"
         implementation_lower_repeat_compliance = deepcopy(implementation)
@@ -175,7 +185,7 @@ def create_scenarios() -> List:
         implementation_low_cost.name = f"{fqhc}_implementation_low_initial_treat_cost"
         scenarios.append(implementation_low_cost)
 
-        # TODO: Sensitivity analysis 3. Lower compliance with diagnostic colonoscopy
+        # Sensitivity analysis 3. Lower compliance with diagnostic colonoscopy
         baseline_lower_compliance = deepcopy(baseline)
         baseline_lower_compliance.transform(
             transform_diagnostic_compliance(diagnostic_compliance_rate)
@@ -191,6 +201,9 @@ def create_scenarios() -> List:
             f"{fqhc}_implementation_lower_diagnostic_compliance"
         )
         scenarios.append(implementation_lower_compliance)
+
+        # TODO: Sensitivity analysis 4. Lower surveillance frequency and end age.
+        # TODO: add values for lower surveillance frequency by polyp stage and end age
 
     return scenarios
 

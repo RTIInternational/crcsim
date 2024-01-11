@@ -11,6 +11,8 @@ We don't model the intervention explicitly. In other words, we didn't add any co
 
 Includes 2 scenarios per health center: one baseline scenario and one intervention scenario. The baseline scenarios are based on real data and the intervention scenarios include a hypothetical increase in screening compliance rates.
 
+All scenarios use an Incidence Rate Ratio (IRR) of 1.19. This is implemented by multiplying the calibrated value of `lesion_risk_alpha` (0.47) by 1.19.
+
 The scenarios are created by `prepare.py`. This script reads a set of base parameters defined in `crcsim/experiment/parameters.json`, modifies them to create the scenarios, and saves them in a directory structure that will eventually be copied to AWS.
 
 ## Defining new experiments

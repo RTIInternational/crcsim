@@ -63,7 +63,7 @@
   "diagnostic_compliance_rate": 1.0,
   "surveillance_compliance_rate": 1.0,
 
-  "lesion_risk_alpha": 0.47,
+  "lesion_risk_alpha": 0.5593,
   "lesion_risk_beta": 2.45,
   "lesion_incidence_ages":  [     0,    20,    30,    40,    45,    50,    55,    60,    65,    70,    75,    85,   100 ],
   "lesion_incidence_rates": [ 0.000, 0.002, 0.002, 0.015, 0.020, 0.025, 0.027, 0.027, 0.027, 0.014, 0.011, 0.011, 0.011 ],
