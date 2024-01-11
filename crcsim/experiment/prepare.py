@@ -141,6 +141,9 @@ def create_scenarios() -> List:
     low_initial_stage_4_treatment_cost = 97_931
     diagnostic_compliance_rate = 0.525
     lower_repeat_compliance = 0.8
+    surveillance_freq_mild = 10
+    surveillance_freq_severe = 2
+    surveillance_end_age = 80
     scenarios = []
 
     for fqhc, rates in initial_compliance.items():
@@ -203,7 +206,29 @@ def create_scenarios() -> List:
         scenarios.append(implementation_lower_compliance)
 
         # TODO: Sensitivity analysis 4. Lower surveillance frequency and end age.
-        # TODO: add values for lower surveillance frequency by polyp stage and end age
+
+        baseline_lower_surveillance = deepcopy(baseline)
+        baseline_lower_surveillance.transform(
+            transform_surveillance_frequency("polyp_mild", surveillance_freq_mild)
+        ).transform(
+            transform_surveillance_frequency("polyp_severe", surveillance_freq_severe)
+        ).transform(
+            transform_surveillance_end_age(surveillance_end_age)
+        )
+        baseline_lower_surveillance.name = f"{fqhc}_baseline_lower_surveillance"
+        scenarios.append(baseline_lower_surveillance)
+
+        implementation_lower_surveillance = deepcopy(implementation)
+        implementation_lower_surveillance.transform(
+            transform_surveillance_frequency("polyp_mild", surveillance_freq_mild)
+        ).transform(
+            transform_surveillance_frequency("polyp_severe", surveillance_freq_severe)
+        ).transform(
+            transform_surveillance_end_age(surveillance_end_age)
+        )
+        implementation_lower_surveillance.name = f"{fqhc}_implementation_lower_surveillance"
+        scenarios.append(implementation_lower_surveillance)
+
 
     return scenarios
 
