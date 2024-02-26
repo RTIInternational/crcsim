@@ -123,6 +123,27 @@ def transform_surveillance_end_age(age: int) -> Callable:
 
     return transform
 
+def transform_delayed_onset_compliance(age_ranges, compliance_rates, test) -> Callable:
+    def transform(params):
+        params["delayed_onset_compliance"] = {
+            "age_ranges": age_ranges,
+            "compliance_rates": compliance_rates,
+            "test": test
+        }
+    return transform
+
+def transform_random_compliance(test: str) -> Callable:
+    def transform(params):
+        params["random_compliance"] = {
+            "test": test
+        }
+        initial_compliance_rate = random.uniform(0.5, 0.9)
+        params["tests"][test]["initial_compliance_rate"] = initial_compliance_rate
+        for year in range(1, 10):
+            conditional_compliance_rate = random.uniform(0.5, 0.9)
+            params["tests"][test][f"compliance_rate_year_{year}"] = conditional_compliance_rate
+
+    return transform
 
 def create_scenarios() -> List:
     # For each health center, define the initial compliance rate in the baseline
@@ -144,7 +165,12 @@ def create_scenarios() -> List:
     low_surveillance_freq_mild = 10
     low_surveillance_freq_severe = 2
     low_surveillance_end_age = 80
+    start_age = 50
+    end_age = 75
     scenarios = []
+
+    fifty_percent_compliance = {year: 0.5 for year in range(start_age, end_age + 1)}
+    twenty_percent_compliance = {year: 0.2 for year in range(start_age, end_age + 1)}
 
     for fqhc, rates in initial_compliance.items():
         baseline = Scenario(
@@ -205,7 +231,7 @@ def create_scenarios() -> List:
         )
         scenarios.append(implementation_lower_compliance)
 
-        # TODO: Sensitivity analysis 4. Lower surveillance frequency and end age.
+        # Sensitivity analysis 4. Lower surveillance frequency and end age.
 
         baseline_lower_surveillance = deepcopy(baseline)
         baseline_lower_surveillance.transform(
@@ -229,6 +255,61 @@ def create_scenarios() -> List:
         implementation_lower_surveillance.name = f"{fqhc}_implementation_lower_surveillance"
         scenarios.append(implementation_lower_surveillance)
 
+        # Scenarios: 100% FIT compliance
+        implementation_100_compliance = deepcopy(implementation)
+        implementation_100_compliance.transform(
+            transform_repeat_compliance(1.0, "FIT")
+        )
+        implementation_100_compliance.name = f"{fqhc}_implementation_100_compliance"
+        scenarios.append(implementation_100_compliance)
+
+        # Scenarios: 0% FIT Compliance
+        implementation_0_compliance = deepcopy(implementation)
+        implementation_0_compliance.transform(
+            transform_repeat_compliance(0.0, "FIT")
+        )
+        implementation_0_compliance.name = f"{fqhc}_implementation_0_FIT_compliance"
+        scenarios.append(implementation_0_compliance)
+
+        # Scenarios: Delayed Onset Scenarios 50 to 64
+        delayed_onset_50_64 = deepcopy(implementation)
+        delayed_onset_50_64.transform(
+            transform_delayed_onset_compliance(
+                age_ranges=[(50, 64), (65, 75)],
+                compliance_rates=[0.0, 1.0],
+                test="FIT"
+            )
+        )
+        delayed_onset_50_64.name = f"{fqhc}_delayed_onset_50_64"
+        scenarios.append(delayed_onset_50_64)
+
+        # Scenarios: Delayed Onset Scenarios 50 to 59
+        delayed_onset_50_59 = deepcopy(implementation)
+        delayed_onset_50_59.transform(
+            transform_delayed_onset_compliance(
+                age_ranges=[(50, 59), (60, 75)],
+                compliance_rates=[0.0, 1.0],
+                test="FIT"
+            )
+        )
+        delayed_onset_50_59.name = f"{fqhc}_delayed_onset_50_59"
+        scenarios.append(delayed_onset_50_59)
+
+        # Scenario with 50% compliance every year
+        random_50_compliance = deepcopy(implementation)
+        random_50_compliance.transform(
+            transform_random_compliance("FIT", fifty_percent_compliance)
+        )
+        random_50_compliance.name = f"{fqhc}_random_50_compliance"
+        scenarios.append(random_50_compliance)
+
+        # Scenario with 20% compliance every year
+        random_20_compliance = deepcopy(implementation)
+        random_20_compliance.transform(
+            transform_random_compliance("FIT", twenty_percent_compliance)
+        )
+        random_20_compliance.name = f"{fqhc}_random_20_compliance"
+        scenarios.append(random_20_compliance)
 
     return scenarios
 
