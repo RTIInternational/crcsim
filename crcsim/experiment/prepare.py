@@ -87,42 +87,6 @@ def transform_initial_compliance(rate) -> Callable:
     return transform
 
 
-def transform_treatment_cost(stage: str, phase: str, value: int) -> Callable:
-    def transform(params):
-        params[f"cost_treatment_stage{stage}_{phase}"] = value
-
-    return transform
-
-
-def transform_repeat_compliance(rate: float, test: str) -> Callable:
-    def transform(params):
-        params["tests"][test]["compliance_rate_given_prev_compliant"] = [
-            rate for _ in params["tests"][test]["compliance_rate_given_prev_compliant"]
-        ]
-
-    return transform
-
-
-def transform_diagnostic_compliance(rate) -> Callable:
-    def transform(params):
-        params["diagnostic_compliance_rate"] = rate
-
-    return transform
-
-
-def transform_surveillance_frequency(stage: str, frequency: int) -> Callable:
-    def transform(params):
-        params[f"surveillance_freq_{stage}"] = frequency
-
-    return transform
-
-
-def transform_surveillance_end_age(age: int) -> Callable:
-    def transform(params):
-        params["surveillance_end_age"] = age
-
-    return transform
-
 def transform_delayed_onset_compliance(age_ranges, compliance_rates, test) -> Callable:
     def transform(params):
         params["delayed_onset_compliance"] = {
@@ -143,6 +107,10 @@ def transform_random_compliance(test: str) -> Callable:
             conditional_compliance_rate = random.uniform(0.5, 0.9)
             params["tests"][test][f"compliance_rate_year_{year}"] = conditional_compliance_rate
 
+    return transform
+def transform_test_frequency(test: str, frequency: int) -> Callable:
+    def transform(params):
+        params["tests"][test]["frequency_years"] = frequency
     return transform
 
 def create_scenarios() -> List:
@@ -182,78 +150,6 @@ def create_scenarios() -> List:
             name=f"{fqhc}_implementation", params=get_default_params()
         ).transform(transform_initial_compliance(rates[1]))
         scenarios.append(implementation)
-
-        # Sensitivity Analysis 1.  Lower repeat compliance (note that the baseline runs stay the same)
-
-        test_name = "FIT"
-        implementation_lower_repeat_compliance = deepcopy(implementation)
-        implementation_lower_repeat_compliance.transform(
-            transform_repeat_compliance(lower_repeat_compliance, test_name)
-        )
-        implementation_lower_repeat_compliance.name = (
-            f"{fqhc}_implementation_lower_repeat_compliance"
-        )
-        scenarios.append(implementation_lower_repeat_compliance)
-
-        # Sensitivity analysis 2. Lower cost for stage III and stage IV initial phase
-        baseline_low_cost = deepcopy(baseline)
-        baseline_low_cost.transform(
-            transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
-        ).transform(
-            transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
-        )
-        baseline_low_cost.name = f"{fqhc}_baseline_low_initial_treat_cost"
-        scenarios.append(baseline_low_cost)
-
-        implementation_low_cost = deepcopy(implementation)
-        implementation_low_cost.transform(
-            transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
-        ).transform(
-            transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
-        )
-        implementation_low_cost.name = f"{fqhc}_implementation_low_initial_treat_cost"
-        scenarios.append(implementation_low_cost)
-
-        # Sensitivity analysis 3. Lower compliance with diagnostic colonoscopy
-        baseline_lower_compliance = deepcopy(baseline)
-        baseline_lower_compliance.transform(
-            transform_diagnostic_compliance(low_diagnostic_compliance_rate)
-        )
-        baseline_lower_compliance.name = f"{fqhc}_baseline_lower_diagnostic_compliance"
-        scenarios.append(baseline_lower_compliance)
-
-        implementation_lower_compliance = deepcopy(implementation)
-        implementation_lower_compliance.transform(
-            transform_diagnostic_compliance(low_diagnostic_compliance_rate)
-        )
-        implementation_lower_compliance.name = (
-            f"{fqhc}_implementation_lower_diagnostic_compliance"
-        )
-        scenarios.append(implementation_lower_compliance)
-
-        # Sensitivity analysis 4. Lower surveillance frequency and end age.
-
-        baseline_lower_surveillance = deepcopy(baseline)
-        baseline_lower_surveillance.transform(
-            transform_surveillance_frequency("polyp_mild", low_surveillance_freq_mild)
-        ).transform(
-            transform_surveillance_frequency("polyp_severe", low_surveillance_freq_severe)
-        ).transform(
-            transform_surveillance_end_age(low_surveillance_end_age)
-        )
-        baseline_lower_surveillance.name = f"{fqhc}_baseline_lower_surveillance"
-        scenarios.append(baseline_lower_surveillance)
-
-        implementation_lower_surveillance = deepcopy(implementation)
-        implementation_lower_surveillance.transform(
-            transform_surveillance_frequency("polyp_mild", low_surveillance_freq_mild)
-        ).transform(
-            transform_surveillance_frequency("polyp_severe", low_surveillance_freq_severe)
-        ).transform(
-            transform_surveillance_end_age(low_surveillance_end_age)
-        )
-        implementation_lower_surveillance.name = f"{fqhc}_implementation_lower_surveillance"
-        scenarios.append(implementation_lower_surveillance)
 
         # Scenarios: 100% FIT compliance
         implementation_100_compliance = deepcopy(implementation)
@@ -295,6 +191,21 @@ def create_scenarios() -> List:
         delayed_onset_50_59.name = f"{fqhc}_delayed_onset_50_59"
         scenarios.append(delayed_onset_50_59)
 
+        # Scenario for every other year testing
+        one_year_testing = deepcopy(implementation)
+        one_year_testing.transform(
+            transform_test_frequency("FIT", 2)
+        )
+        one_year_testing.name = f"{fqhc}_one_year_testing"
+        scenarios.append(one_year_testing)
+
+        # Scenario for every five years testing
+        five_years_testing = deepcopy(implementation)
+        five_years_testing.transform(
+            transform_test_frequency("FIT", 5) 
+        )
+        five_years_testing.name = f"{fqhc}_five_years_testing"
+        scenarios.append(five_years_testing)
         # Scenario with 50% compliance every year
         random_50_compliance = deepcopy(implementation)
         random_50_compliance.transform(
