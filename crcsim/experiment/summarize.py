@@ -4,8 +4,7 @@ from pathlib import Path
 import pandas as pd
 import s3fs  # noqa: F401
 
-
-S3_BUCKET_NAME = "crcsim-exp-crccp-sensitivity01"
+S3_BUCKET_NAME = "crcsim-exp-test-patterns"
 
 
 def main() -> None:
