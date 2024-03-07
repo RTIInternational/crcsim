@@ -86,6 +86,12 @@ def transform_initial_compliance(rate) -> Callable:
 
     return transform
 
+def transform_repeat_compliance(rate: float, test: str) -> Callable:
+    def transform(params):
+        params[f"{test}_compliance_rate"] = rate
+
+    return transform
+
 
 def transform_delayed_onset_compliance(age_ranges, compliance_rates, test) -> Callable:
     def transform(params):
