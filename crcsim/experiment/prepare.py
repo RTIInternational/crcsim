@@ -1,8 +1,8 @@
 import json
 import random
+from enum import Enum, unique
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
-from copy import deepcopy
 
 import fire
 
@@ -18,6 +18,18 @@ class Scenario:
     def transform(self, transformer: Callable) -> "Scenario":
         transformer(self.params)
         return self
+
+
+@unique
+class ConditionalComplianceParam(Enum):
+    PREV_COMPLIANT = "compliance_rate_given_prev_compliant"
+    NOT_PREV_COMPLIANT = "compliance_rate_given_not_prev_compliant"
+
+
+@unique
+class Test(Enum):
+    FIT = "FIT"
+    COLONOSCOPY = "Colonoscopy"
 
 
 def prepare_experiment_dir(
@@ -86,147 +98,111 @@ def transform_initial_compliance(rate) -> Callable:
 
     return transform
 
-def transform_repeat_compliance(rate: float, test: str) -> Callable:
+
+def transform_conditional_compliance_rates(
+    test: Test, param: ConditionalComplianceParam, rates: List[float]
+) -> Callable:
+    """
+    Replaces a conditional compliance parameter with a new set of rates.
+    """
+
     def transform(params):
-        params[f"{test}_compliance_rate"] = rate
+        params["tests"][test.value][param.value] = rates
 
     return transform
 
 
-def transform_delayed_onset_compliance(age_ranges, compliance_rates, test) -> Callable:
+def transform_delayed_onset(test: Test, onset_age: int) -> Callable:
+    """
+    Transforms the necessary compliance parameters such that, for the given test,
+    compliance is 0.0 for all years before the given age, and 1.0 for all years
+    after the given age.
+    """
+
     def transform(params):
-        params["delayed_onset_compliance"] = {
-            "age_ranges": age_ranges,
-            "compliance_rates": compliance_rates,
-            "test": test
-        }
+        start_age = params["tests"][test.value]["routine_start"]
+        # Testing years are inclusive, so add 1
+        testing_years = params["tests"][test.value]["routine_end"] - start_age + 1
+
+        # Initial compliance is 0
+        params["initial_compliance_rate"] = 0.0
+
+        # Then everyone remains noncompliant until the given age.
+        compliance_rate_given_not_prev_compliant = [0.0] * testing_years
+        onset_year = onset_age - start_age
+        compliance_rate_given_not_prev_compliant[onset_year] = 1.0
+        params["tests"][test.value][
+            "compliance_rate_given_not_prev_compliant"
+        ] = compliance_rate_given_not_prev_compliant
+
+        # Then everyone remains compliant after the given age.
+        # We can just set the compliance rate to 1.0 for all years, including those before
+        # the onset age, because initial compliance is 0.0.
+        compliance_rate_given_prev_compliant = [1.0] * testing_years
+        params["tests"][test.value][
+            "compliance_rate_given_prev_compliant"
+        ] = compliance_rate_given_prev_compliant
+
     return transform
 
-def transform_random_compliance(test: str) -> Callable:
+
+def transform_routine_freq(test: Test, freq: int) -> Callable:
     def transform(params):
-        params["random_compliance"] = {
-            "test": test
-        }
-        initial_compliance_rate = random.uniform(0.5, 0.9)
-        params["tests"][test]["initial_compliance_rate"] = initial_compliance_rate
-        for year in range(1, 10):
-            conditional_compliance_rate = random.uniform(0.5, 0.9)
-            params["tests"][test][f"compliance_rate_year_{year}"] = conditional_compliance_rate
+        params["tests"][test.value]["routine_freq"] = freq
 
     return transform
-def transform_test_frequency(test: str, frequency: int) -> Callable:
-    def transform(params):
-        params["tests"][test]["frequency_years"] = frequency
-    return transform
+
 
 def create_scenarios() -> List:
-    # For each health center, define the initial compliance rate in the baseline
-    # scenario and the implementation scenario.
-    initial_compliance = {
-        "fqhc1": (0.522, 0.593),
-        "fqhc2": (0.154, 0.421),
-        "fqhc3": (0.519, 0.615),
-        "fqhc4": (0.278, 0.374),
-        "fqhc5": (0.383, 0.572),
-        "fqhc6": (0.211, 0.392),
-        "fqhc7": (0.257, 0.354),
-        "fqhc8": (0.190, 0.390),
-    }
-    low_initial_stage_3_treatment_cost = 67_300
-    low_initial_stage_4_treatment_cost = 97_931
-    low_diagnostic_compliance_rate = 0.525
-    lower_repeat_compliance = 0.8
-    low_surveillance_freq_mild = 10
-    low_surveillance_freq_severe = 2
-    low_surveillance_end_age = 80
-    start_age = 50
-    end_age = 75
+
     scenarios = []
 
-    fifty_percent_compliance = {year: 0.5 for year in range(start_age, end_age + 1)}
-    twenty_percent_compliance = {year: 0.2 for year in range(start_age, end_age + 1)}
+    # Scenarios: 100% FIT compliance
+    always_compliant = Scenario(
+        name="always_compliant", params=get_default_params()
+    ).transform(transform_initial_compliance(1.0))
+    scenarios.append(always_compliant)
 
-    for fqhc, rates in initial_compliance.items():
-        baseline = Scenario(
-            name=f"{fqhc}_baseline", params=get_default_params()
-        ).transform(transform_initial_compliance(rates[0]))
-        scenarios.append(baseline)
+    # Scenarios: 0% FIT Compliance
+    never_compliant = Scenario(
+        name="never_compliant", params=get_default_params()
+    ).transform(transform_initial_compliance(0.0))
+    scenarios.append(never_compliant)
 
-        implementation = Scenario(
-            name=f"{fqhc}_implementation", params=get_default_params()
-        ).transform(transform_initial_compliance(rates[1]))
-        scenarios.append(implementation)
+    # Scenarios: Delayed Onset Until Age 60
+    delayed_onset_60 = Scenario(
+        name="delayed_onset_60", params=get_default_params()
+    ).transform(transform_delayed_onset(Test.FIT, 60))
+    scenarios.append(delayed_onset_60)
 
-        # Scenarios: 100% FIT compliance
-        implementation_100_compliance = deepcopy(implementation)
-        implementation_100_compliance.transform(
-            transform_repeat_compliance(1.0, "FIT")
+    # TODO: Scenarios: Delayed Onset Until Age 65
+
+    # Scenario for every other year testing
+    every_two_years = Scenario(
+        name="every_two_years", params=get_default_params()
+    ).transform(transform_routine_freq(Test.FIT, 2))
+    scenarios.append(every_two_years)
+
+    # TODO: Scenario for every five years testing
+
+    # Scenario with 50% compliance every year
+    #
+    # Shorthand to create conditional compliance arrays without specifying each year.
+    # Conditional compliance arrays are length 26, one for each year of testing (50-75).
+    fifty_percent_compliance_rates = [0.5] * 36
+
+    fifty_percent_compliance = Scenario(
+        name="fifty_percent_compliance", params=get_default_params()
+    ).transform(
+        transform_conditional_compliance_rates(
+            Test.FIT,
+            ConditionalComplianceParam.PREV_COMPLIANT,
+            fifty_percent_compliance_rates,
         )
-        implementation_100_compliance.name = f"{fqhc}_implementation_100_compliance"
-        scenarios.append(implementation_100_compliance)
+    )
+    scenarios.append(fifty_percent_compliance)
 
-        # Scenarios: 0% FIT Compliance
-        implementation_0_compliance = deepcopy(implementation)
-        implementation_0_compliance.transform(
-            transform_repeat_compliance(0.0, "FIT")
-        )
-        implementation_0_compliance.name = f"{fqhc}_implementation_0_FIT_compliance"
-        scenarios.append(implementation_0_compliance)
-
-        # Scenarios: Delayed Onset Scenarios 50 to 64
-        delayed_onset_50_64 = deepcopy(implementation)
-        delayed_onset_50_64.transform(
-            transform_delayed_onset_compliance(
-                age_ranges=[(50, 64), (65, 75)],
-                compliance_rates=[0.0, 1.0],
-                test="FIT"
-            )
-        )
-        delayed_onset_50_64.name = f"{fqhc}_delayed_onset_50_64"
-        scenarios.append(delayed_onset_50_64)
-
-        # Scenarios: Delayed Onset Scenarios 50 to 59
-        delayed_onset_50_59 = deepcopy(implementation)
-        delayed_onset_50_59.transform(
-            transform_delayed_onset_compliance(
-                age_ranges=[(50, 59), (60, 75)],
-                compliance_rates=[0.0, 1.0],
-                test="FIT"
-            )
-        )
-        delayed_onset_50_59.name = f"{fqhc}_delayed_onset_50_59"
-        scenarios.append(delayed_onset_50_59)
-
-        # Scenario for every other year testing
-        one_year_testing = deepcopy(implementation)
-        one_year_testing.transform(
-            transform_test_frequency("FIT", 2)
-        )
-        one_year_testing.name = f"{fqhc}_one_year_testing"
-        scenarios.append(one_year_testing)
-
-        # Scenario for every five years testing
-        five_years_testing = deepcopy(implementation)
-        five_years_testing.transform(
-            transform_test_frequency("FIT", 5) 
-        )
-        five_years_testing.name = f"{fqhc}_five_years_testing"
-        scenarios.append(five_years_testing)
-        # Scenario with 50% compliance every year
-        random_50_compliance = deepcopy(implementation)
-        random_50_compliance.transform(
-            transform_random_compliance("FIT", fifty_percent_compliance)
-        )
-        random_50_compliance.name = f"{fqhc}_random_50_compliance"
-        scenarios.append(random_50_compliance)
-
-        # Scenario with 20% compliance every year
-        random_20_compliance = deepcopy(implementation)
-        random_20_compliance.transform(
-            transform_random_compliance("FIT", twenty_percent_compliance)
-        )
-        random_20_compliance.name = f"{fqhc}_random_20_compliance"
-        scenarios.append(random_20_compliance)
+    # TODO: Scenario with 20% compliance every year
 
     return scenarios
 
