@@ -222,6 +222,8 @@ def create_scenarios() -> List:
             twenty_percent_compliance_rates,
         )
     )
+    scenarios.append(twenty_percent_compliance)
+
     return scenarios
 
 
