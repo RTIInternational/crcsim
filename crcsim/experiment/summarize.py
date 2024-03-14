@@ -66,7 +66,7 @@ def combine_run_results() -> pd.DataFrame:
             iteration_name = f"{iteration:03}"
 
             print(f"Fetching results for {scenario}, iteration {iteration_name}")
-            
+
             df = pd.read_csv(
                 f"s3://{S3_BUCKET_NAME}/scenarios/{scenario}/results_{iteration_name}.csv"
             )
