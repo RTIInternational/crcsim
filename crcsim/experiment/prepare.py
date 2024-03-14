@@ -175,7 +175,7 @@ def create_scenarios() -> List:
     ).transform(transform_delayed_onset(Test.FIT, 60))
     scenarios.append(delayed_onset_60)
 
-    # TODO: Scenarios: Delayed Onset Until Age 65
+    # Scenarios: Delayed Onset Until Age 65
     delayed_onset_65 = Scenario(
         name="delayed_onset_65", params=get_default_params()
     ).transform(transform_delayed_onset(Test.FIT, 65))
@@ -187,7 +187,7 @@ def create_scenarios() -> List:
     ).transform(transform_routine_freq(Test.FIT, 2))
     scenarios.append(every_two_years)
 
-    # TODO: Scenario for every five years testing
+    # Scenario for every five years testing
     every_five_years = Scenario(
         name="every_five_years", params=get_default_params()
     ).transform(transform_routine_freq(Test.FIT, 5))
@@ -197,7 +197,7 @@ def create_scenarios() -> List:
     #
     # Shorthand to create conditional compliance arrays without specifying each year.
     # Conditional compliance arrays are length 26, one for each year of testing (50-75).
-    fifty_percent_compliance_rates = [0.5] * 36
+    fifty_percent_compliance_rates = [0.5] * 26
 
     fifty_percent_compliance = Scenario(
         name="fifty_percent_compliance", params=get_default_params()
@@ -210,8 +210,8 @@ def create_scenarios() -> List:
     )
     scenarios.append(fifty_percent_compliance)
 
-    # TODO: Scenario with 20% compliance every year
-    twenty_percent_compliance_rates = [0.2] * 36
+    # Scenario with 20% compliance every year
+    twenty_percent_compliance_rates = [0.2] * 26
 
     twenty_percent_compliance = Scenario(
         name="twenty_percent_compliance", params=get_default_params()
