@@ -77,9 +77,9 @@ class Analysis:
         ]
         unscreened_undiagnosed_40yos = unscreened_undiagnosed_40yo_deaths.person_id
         n_unscreened_undiagnosed_40yos = len(unscreened_undiagnosed_40yos)
-        replication_output_row[
-            "n_unscreened_undiagnosed_40yos"
-        ] = n_unscreened_undiagnosed_40yos
+        replication_output_row["n_unscreened_undiagnosed_40yos"] = (
+            n_unscreened_undiagnosed_40yos
+        )
         thousands_of_40yos = n_unscreened_undiagnosed_40yos / 1_000
 
         # Number of times an individual entered the polyp state
@@ -161,9 +161,9 @@ class Analysis:
         discounted_expected_lifespans_over_40 = self.discount_ages(
             expected_lifespans_over_40.time
         )
-        replication_output_row[
-            "discounted_lifeexp_if_unscreened_undiagnosed_at_40"
-        ] = np.mean(discounted_expected_lifespans_over_40)
+        replication_output_row["discounted_lifeexp_if_unscreened_undiagnosed_at_40"] = (
+            np.mean(discounted_expected_lifespans_over_40)
+        )
 
         # Mean observed lifespan among all individuals
         replication_output_row["lifeobs"] = np.mean(deaths.time)
@@ -179,9 +179,9 @@ class Analysis:
         discounted_lifespans_over_40 = self.discount_ages(
             unscreened_undiagnosed_40yo_deaths.time
         )
-        replication_output_row[
-            "discounted_lifeobs_if_unscreened_undiagnosed_at_40"
-        ] = np.mean(discounted_lifespans_over_40)
+        replication_output_row["discounted_lifeobs_if_unscreened_undiagnosed_at_40"] = (
+            np.mean(discounted_lifespans_over_40)
+        )
 
         # Mean number of life years lost to CRC among all individuals
         replication_output_row["lifelost"] = (
@@ -381,12 +381,12 @@ class Analysis:
             mean_discounted_cost_treatment = (
                 treatments_in_phase.discounted_cost.sum() / n_individuals
             )
-            replication_output_row[
-                f"cost_treatment_{phase.lower()}"
-            ] = mean_cost_treatment
-            replication_output_row[
-                f"discounted_cost_treatment_{phase.lower()}"
-            ] = mean_discounted_cost_treatment
+            replication_output_row[f"cost_treatment_{phase.lower()}"] = (
+                mean_cost_treatment
+            )
+            replication_output_row[f"discounted_cost_treatment_{phase.lower()}"] = (
+                mean_discounted_cost_treatment
+            )
             # per 1k undiagnosed and unscreened 40-year-olds
             treatments_in_phase_over_40 = treatments_over_40[
                 treatments_over_40.role.eq(phase)
@@ -423,11 +423,24 @@ class Analysis:
 
         # Number of times each test was adopted for routine screening
         routine_tests_chosen = self.raw_output[
-            self.raw_output.record_type.eq("test_chosen")
+            self.raw_output.record_type.eq("test_chosen") & self.raw_output.time.eq(0)
         ]
         for rt in self.params["routine_tests"]:
             rt_chosen = routine_tests_chosen[routine_tests_chosen.test_name.eq(rt)]
             replication_output_row[f"{rt}_adopted"] = len(rt_chosen.index)
+
+        # Number of years each routine test was used
+        # (if test variable routine test was enabled in the simulation)
+        if self.params["use_variable_routine_test"]:
+            rt_years = self.raw_output[
+                self.raw_output.record_type.eq("test_chosen")
+                & self.raw_output.time.gt(0)
+            ]
+            rt_years_grouped = rt_years.groupby(["test_name"]).agg(
+                count=("time", "count")
+            )
+            for ix, row in rt_years_grouped.iterrows():
+                replication_output_row[f"{ix}_available_as_routine"] = row["count"]
 
         # Number of times each test was performed for routine screening
         # and number of times per thousand unscreened and undiagnosed 40-year-olds
@@ -655,9 +668,9 @@ class Analysis:
         polyp_to_pre["time_polyp_to_pre"] = (
             polyp_to_pre["time_cancer"] - polyp_to_pre["time_polyp_formation"]
         )
-        replication_output_row[
-            "time_polyp_to_pre"
-        ] = polyp_to_pre.time_polyp_to_pre.mean()
+        replication_output_row["time_polyp_to_pre"] = (
+            polyp_to_pre.time_polyp_to_pre.mean()
+        )
 
         # Among all instances of an individual being clinically diagnosed with CRC,
         # mean time between the onset of CRC and the diagnosis of CRC.
@@ -703,9 +716,9 @@ class Analysis:
         clin_to_dead["time_clin_to_dead"] = (
             clin_to_dead["time_dead"] - clin_to_dead["time_clin"]
         )
-        replication_output_row[
-            "time_clin_to_dead"
-        ] = clin_to_dead.time_clin_to_dead.mean()
+        replication_output_row["time_clin_to_dead"] = (
+            clin_to_dead.time_clin_to_dead.mean()
+        )
 
         # Calculate population rates
         status_arrays = self.compute_status_arrays()
