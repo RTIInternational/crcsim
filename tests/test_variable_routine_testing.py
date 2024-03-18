@@ -1,8 +1,14 @@
+import logging
 import pytest
 import random
 from copy import deepcopy
 
-from crcsim.agent import Person
+from crcsim.agent import (
+    Person,
+    PersonDiseaseMessage,
+    PersonTestingMessage,
+    PersonTreatmentMessage,
+)
 from crcsim.parameters import load_params
 from crcsim.scheduler import Scheduler
 
@@ -97,6 +103,51 @@ def test_switching_scenarios():
         + ["Colonoscopy"] * 1
         + ["FIT"] * 20,
     }
+
+
+class TestPerson(Person):
+    def start(self):
+        self.never_compliant = False
+        self.choose_tests()
+
+        self.handle_disease_message(PersonDiseaseMessage.INIT)
+        self.handle_testing_message(PersonTestingMessage.INIT)
+        self.handle_treatment_message(PersonTreatmentMessage.INIT)
+
+        self.scheduler.add_event(
+            message="Conduct yearly actions",
+            delay=1,
+            handler=self.handle_yearly_actions,
+        )
+
+        # Fix lifespan at 100 for testing instead of calling self.start_life_timer()
+        self.expected_lifespan = 100
+        self.scheduler.add_event(
+            message=PersonDiseaseMessage.OTHER_DEATH,
+            handler=self.handle_disease_message,
+            delay=self.expected_lifespan,
+        )
+        self.out.add_expected_lifespan(
+            person_id=self.id,
+            time=self.expected_lifespan,
+        )
+
+        # Person.start has lesion delay functions here to add an event to the
+        # scheduler for the person's first lesion. We don't want any lesions for the
+        # test person, so that chunk is omitted here. Because the next lesion delay
+        # is computed when a lesion onset is handled, this results in the person
+        # never having a lesion.
+
+    def simulate(self):
+        while not self.scheduler.is_empty():
+            event = self.scheduler.consume_next_event()
+            if not event.enabled:
+                continue
+            if event.message == "end_simulation":
+                logging.debug("[scheduler] ending simulation \n")
+                break
+            handler = event.handler
+            handler(event.message)
 
 
 def test_one_colonoscopy_equivalence(params, test_switching_scenarios):
