@@ -11,6 +11,7 @@ from crcsim.agent import (
 )
 from crcsim.parameters import load_params
 from crcsim.scheduler import Scheduler
+from crcsim.output import Output
 
 
 class MockScheduler:
@@ -107,7 +108,6 @@ def test_switching_scenarios():
 
 class TestPerson(Person):
     def start(self):
-        self.never_compliant = False
         self.choose_tests()
 
         self.handle_disease_message(PersonDiseaseMessage.INIT)
@@ -139,6 +139,7 @@ class TestPerson(Person):
         # never having a lesion.
 
     def simulate(self):
+        # Simplified version of the simulation loop used in crcsim.__main__
         while not self.scheduler.is_empty():
             event = self.scheduler.consume_next_event()
             if not event.enabled:
@@ -168,7 +169,41 @@ def test_one_colonoscopy_equivalence(params, test_switching_scenarios):
         "one_colonoscopy_then_fit_v2"
     ]
 
-    ...
+    p1 = TestPerson(
+        id=1,
+        # Sex and race_ethnicity are irrelevant to this test but we need to choose an
+        # arbitrary value for the simulation to run.
+        sex="female",
+        race_ethnicity="black_non_hispanic",
+        params=params_one_colonoscopy_v1,
+        scheduler=Scheduler(),
+        rng=random.Random(1),
+        out=Output(),
+    )
+    p1.start()
+    p1.simulate()
+
+    p2 = TestPerson(
+        id=2,
+        sex="female",
+        race_ethnicity="black_non_hispanic",
+        params=params_one_colonoscopy_v1,
+        scheduler=Scheduler(),
+        rng=random.Random(1),
+        out=Output(),
+    )
+    p2.start()
+    p2.simulate()
+
+    # Assert that both people have one colonoscopy and 15 FIT tests
+    for person in [p1, p2]:
+        tests = [
+            row for row in person.out.rows if row["record_type"] == "test_performed"
+        ]
+        colonoscopies = [test for test in tests if test["test_name"] == "Colonoscopy"]
+        fits = [test for test in tests if test["test_name"] == "FIT"]
+        assert len(colonoscopies) == 1
+        assert len(fits) == 15
 
 
 def test_ten_fit_then_colonoscopy(params, test_switching_scenarios):
@@ -184,7 +219,23 @@ def test_ten_fit_then_colonoscopy(params, test_switching_scenarios):
         "ten_fit_then_colonoscopy"
     ]
 
-    ...
+    p = TestPerson(
+        id=None,
+        sex="female",
+        race_ethnicity="black_non_hispanic",
+        params=params_ten_fit,
+        scheduler=Scheduler(),
+        rng=random.Random(1),
+        out=Output(),
+    )
+    p.start()
+    p.simulate()
+
+    tests = [row for row in p.out.rows if row["record_type"] == "test_performed"]
+    colonoscopies = [test for test in tests if test["test_name"] == "Colonoscopy"]
+    fits = [test for test in tests if test["test_name"] == "FIT"]
+    assert len(colonoscopies) == 2
+    assert len(fits) == 10
 
 
 def test_fit_then_colonoscopy_then_fit(params, test_switching_scenarios):
@@ -192,11 +243,28 @@ def test_fit_then_colonoscopy_then_fit(params, test_switching_scenarios):
     Asserts that the fit_then_colonoscopy_then_fit test switching scenario results in
     five FIT tests, one colonoscopy, then ten FIT tests for a person with 100% compliance.
     In this scenario, the person should get a FIT test every year from age 50 to 54, then a
-    colonoscopy at age 55, then a FIT test every year from age 56 to 75.
+    colonoscopy at age 55, then a FIT test every year from age 66 to 75 (in total, one
+    colonoscopy and 15 FIT tests).
     """
     params_fit_then_colonoscopy = deepcopy(params)
     params_fit_then_colonoscopy["routine_test_by_year"] = test_switching_scenarios[
         "fit_then_colonoscopy_then_fit"
     ]
 
-    ...
+    p = TestPerson(
+        id=None,
+        sex="female",
+        race_ethnicity="black_non_hispanic",
+        params=params_fit_then_colonoscopy,
+        scheduler=Scheduler(),
+        rng=random.Random(1),
+        out=Output(),
+    )
+    p.start()
+    p.simulate()
+
+    tests = [row for row in p.out.rows if row["record_type"] == "test_performed"]
+    colonoscopies = [test for test in tests if test["test_name"] == "Colonoscopy"]
+    fits = [test for test in tests if test["test_name"] == "FIT"]
+    assert len(colonoscopies) == 1
+    assert len(fits) == 15
