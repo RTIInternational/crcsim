@@ -106,6 +106,9 @@
   "diagnostic_test": "Colonoscopy",
   "surveillance_test": "Colonoscopy",
   "polypectomy_proportion_lethal": 0.00002,
+  "use_variable_routine_test": true,
+  "routine_testing_year": [           50,            51,            52,            53,            54,            55,            56,            57,            58,            59,            60,    61,    62,    63,    64,    65,    66,    67,    68,    69,    70,    71,    72,    73,    74,    75 ],
+  "routine_test_by_year": ["Colonoscopy", "Colonoscopy", "Colonoscopy", "Colonoscopy", "Colonoscopy", "Colonoscopy", "Colonoscopy", "Colonoscopy", "Colonoscopy", "Colonoscopy", "Colonoscopy", "FIT", "FIT", "FIT", "FIT", "FIT", "FIT", "FIT", "FIT", "FIT", "FIT", "FIT", "FIT", "FIT", "FIT", "FIT" ],
 
   "cost_discount_age": 50,
   "cost_discount_rate": 0.03,

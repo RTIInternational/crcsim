@@ -137,13 +137,14 @@ class Output:
             {"record_type": "lifespan", "person_id": person_id, "time": time}
         )
 
-    def add_routine_test_chosen(self, person_id: Any, test_name: str):
+    def add_routine_test_chosen(self, person_id: Any, test_name: str, time: float):
         self.rows.append(
             {
                 "record_type": "test_chosen",
                 "person_id": person_id,
                 "test_name": test_name,
                 "role": TestingRole.ROUTINE,
+                "time": time,
             }
         )
 
