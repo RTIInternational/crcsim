@@ -107,8 +107,8 @@ class TestPerson(Person):
         self.out = Output(file_name="unused")
         # Sex and race_ethnicity are irrelevant to this test but we need to choose an
         # arbitrary value for the simulation to run.
-        self.sex = ("female",)
-        self.race_ethnicity = ("black_non_hispanic",)
+        self.sex = "female"
+        self.race_ethnicity = "black_non_hispanic"
 
     def start(self):
         self.choose_tests()
@@ -166,8 +166,8 @@ def test_testing_year_misalignment(params):
     with open("parameters.json", "r") as f:
         params = json.load(f)
         params["tests"]["Colonoscopy"]["routine_end"] = 85
-        with TemporaryDirectory() as tmpdir:
-            tmp_path = Path(tmpdir) / "parameters.json"
+        with TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir) / "parameters.json"
             with open(tmp_path, "w") as f:
                 json.dump(params, f)
                 with pytest.raises(ValueError):
@@ -196,7 +196,7 @@ def test_one_colonoscopy_equivalence(params, test_switching_scenarios):
     ]
 
     p1 = TestPerson(
-        id=1,
+        id=None,
         sex=None,
         race_ethnicity=None,
         params=params_one_colonoscopy_v1,
@@ -208,7 +208,7 @@ def test_one_colonoscopy_equivalence(params, test_switching_scenarios):
     p1.simulate()
 
     p2 = TestPerson(
-        id=2,
+        id=None,
         sex=None,
         race_ethnicity=None,
         params=params_one_colonoscopy_v1,

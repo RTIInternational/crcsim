@@ -1263,15 +1263,15 @@ class Person:
 
                 # Store number of polyps found by size. These counts influence how
                 # soon the person needs to be retested.
-                self.previous_test_small[self.diagnostic_test] = (
-                    num_detected_polyps_small
-                )
-                self.previous_test_medium[self.diagnostic_test] = (
-                    num_detected_polyps_medium
-                )
-                self.previous_test_large[self.diagnostic_test] = (
-                    num_detected_polyps_large
-                )
+                self.previous_test_small[
+                    self.diagnostic_test
+                ] = num_detected_polyps_small
+                self.previous_test_medium[
+                    self.diagnostic_test
+                ] = num_detected_polyps_medium
+                self.previous_test_large[
+                    self.diagnostic_test
+                ] = num_detected_polyps_large
 
                 # check whether test resulted in perforation
                 if self.rng.random() < test_params["proportion_perforation"]:
@@ -1537,15 +1537,15 @@ class Person:
 
                 # Store number of polyps found by size. These counts influence how
                 # soon the person needs to be retested.
-                self.previous_test_small[self.surveillance_test] = (
-                    num_detected_polyps_small
-                )
-                self.previous_test_medium[self.surveillance_test] = (
-                    num_detected_polyps_medium
-                )
-                self.previous_test_large[self.surveillance_test] = (
-                    num_detected_polyps_large
-                )
+                self.previous_test_small[
+                    self.surveillance_test
+                ] = num_detected_polyps_small
+                self.previous_test_medium[
+                    self.surveillance_test
+                ] = num_detected_polyps_medium
+                self.previous_test_large[
+                    self.surveillance_test
+                ] = num_detected_polyps_large
 
                 # check whether test resulted in perforation
                 if self.rng.random() < test_params["proportion_perforation"]:
