@@ -1,10 +1,11 @@
 import json
 import logging
-import pytest
 import random
 from copy import deepcopy
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+import pytest
 
 from crcsim.agent import (
     Person,
@@ -12,9 +13,9 @@ from crcsim.agent import (
     PersonTestingMessage,
     PersonTreatmentMessage,
 )
-from crcsim.parameters import load_params, StepFunction
-from crcsim.scheduler import Scheduler
 from crcsim.output import Output
+from crcsim.parameters import StepFunction, load_params
+from crcsim.scheduler import Scheduler
 
 
 @pytest.fixture(scope="module")
@@ -290,4 +291,5 @@ def test_fit_then_colonoscopy_then_fit(params, test_switching_scenarios):
     colonoscopies = [test for test in tests if test["test_name"] == "Colonoscopy"]
     fits = [test for test in tests if test["test_name"] == "FIT"]
     assert len(colonoscopies) == 1
+    assert len(fits) == 16
     assert len(fits) == 16
