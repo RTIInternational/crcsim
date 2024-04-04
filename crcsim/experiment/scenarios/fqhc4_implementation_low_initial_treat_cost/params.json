@@ -27,10 +27,10 @@
   "cost_treatment_stage2_initial": 47790,
   "cost_treatment_stage2_ongoing": 3266,
   "cost_treatment_stage2_terminal": 77098,
-  "cost_treatment_stage3_initial": 67300,
+  "cost_treatment_stage3_initial": 50000,
   "cost_treatment_stage3_ongoing": 5258,
   "cost_treatment_stage3_terminal": 79770,
-  "cost_treatment_stage4_initial": 97931,
+  "cost_treatment_stage4_initial": 80000,
   "cost_treatment_stage4_ongoing": 26474,
   "cost_treatment_stage4_terminal": 99255,
   "max_ongoing_treatments": 4,
@@ -59,7 +59,7 @@
   "never_compliant_rate": 0.0,
   "diagnostic_compliance_rate": 1.0,
   "surveillance_compliance_rate": 1.0,
-  "lesion_risk_alpha": 0.47,
+  "lesion_risk_alpha": 0.5593,
   "lesion_risk_beta": 2.45,
   "lesion_incidence_ages": [
     0,
@@ -94,7 +94,7 @@
   "tests": {
     "FIT": {
       "proportion": 1.0,
-      "routine_start": 50,
+      "routine_start": 45,
       "routine_end": 75,
       "routine_freq": 1,
       "specificity": 0.97,
@@ -184,7 +184,7 @@
     },
     "Colonoscopy": {
       "proportion": 0.0,
-      "routine_start": 50,
+      "routine_start": 45,
       "routine_end": 75,
       "routine_freq": 10,
       "specificity": 0.86,
@@ -280,9 +280,9 @@
   "diagnostic_test": "Colonoscopy",
   "surveillance_test": "Colonoscopy",
   "polypectomy_proportion_lethal": 2e-05,
-  "cost_discount_age": 50,
+  "cost_discount_age": 45,
   "cost_discount_rate": 0.03,
-  "lifespan_discount_age": 50,
+  "lifespan_discount_age": 45,
   "lifespan_discount_rate": 0.03,
   "death_rate_black_female_ages": [
     0,

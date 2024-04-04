@@ -139,6 +139,8 @@ def create_scenarios() -> List:
     }
     low_initial_stage_3_treatment_cost = 67_300
     low_initial_stage_4_treatment_cost = 97_931
+    extra_low_initial_stage_3_treatment_cost = 50_000
+    extra_low_initial_stage_4_treatment_cost = 80_000
     low_diagnostic_compliance_rate = 0.525
     lower_repeat_compliance = 0.8
     low_surveillance_freq_mild = 10
@@ -188,6 +190,35 @@ def create_scenarios() -> List:
         implementation_low_cost.name = f"{fqhc}_implementation_low_initial_treat_cost"
         scenarios.append(implementation_low_cost)
 
+        # Sensitivity analysis 2a. Extra low cost for stage III and stage IV initial phase
+        baseline_extra_low_cost = deepcopy(baseline)
+        baseline_extra_low_cost.transform(
+            transform_treatment_cost(
+                "3", "initial", extra_low_initial_stage_3_treatment_cost
+            )
+        ).transform(
+            transform_treatment_cost(
+                "4", "initial", extra_low_initial_stage_4_treatment_cost
+            )
+        )
+        baseline_extra_low_cost.name = f"{fqhc}_baseline_extra_low_initial_treat_cost"
+        scenarios.append(baseline_extra_low_cost)
+
+        implementation_extra_low_cost = deepcopy(implementation)
+        implementation_extra_low_cost.transform(
+            transform_treatment_cost(
+                "3", "initial", extra_low_initial_stage_3_treatment_cost
+            )
+        ).transform(
+            transform_treatment_cost(
+                "4", "initial", extra_low_initial_stage_4_treatment_cost
+            )
+        )
+        implementation_extra_low_cost.name = (
+            f"{fqhc}_implementation_low_initial_treat_cost"
+        )
+        scenarios.append(implementation_extra_low_cost)
+
         # Sensitivity analysis 3. Lower compliance with diagnostic colonoscopy
         baseline_lower_compliance = deepcopy(baseline)
         baseline_lower_compliance.transform(
@@ -205,13 +236,15 @@ def create_scenarios() -> List:
         )
         scenarios.append(implementation_lower_compliance)
 
-        # TODO: Sensitivity analysis 4. Lower surveillance frequency and end age.
+        # Sensitivity analysis 4. Lower surveillance frequency and end age.
 
         baseline_lower_surveillance = deepcopy(baseline)
         baseline_lower_surveillance.transform(
             transform_surveillance_frequency("polyp_mild", low_surveillance_freq_mild)
         ).transform(
-            transform_surveillance_frequency("polyp_severe", low_surveillance_freq_severe)
+            transform_surveillance_frequency(
+                "polyp_severe", low_surveillance_freq_severe
+            )
         ).transform(
             transform_surveillance_end_age(low_surveillance_end_age)
         )
@@ -222,13 +255,16 @@ def create_scenarios() -> List:
         implementation_lower_surveillance.transform(
             transform_surveillance_frequency("polyp_mild", low_surveillance_freq_mild)
         ).transform(
-            transform_surveillance_frequency("polyp_severe", low_surveillance_freq_severe)
+            transform_surveillance_frequency(
+                "polyp_severe", low_surveillance_freq_severe
+            )
         ).transform(
             transform_surveillance_end_age(low_surveillance_end_age)
         )
-        implementation_lower_surveillance.name = f"{fqhc}_implementation_lower_surveillance"
+        implementation_lower_surveillance.name = (
+            f"{fqhc}_implementation_lower_surveillance"
+        )
         scenarios.append(implementation_lower_surveillance)
-
 
     return scenarios
 

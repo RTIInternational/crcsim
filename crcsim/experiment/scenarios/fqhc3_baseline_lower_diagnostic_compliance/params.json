@@ -59,7 +59,7 @@
   "never_compliant_rate": 0.0,
   "diagnostic_compliance_rate": 0.525,
   "surveillance_compliance_rate": 1.0,
-  "lesion_risk_alpha": 0.47,
+  "lesion_risk_alpha": 0.5593,
   "lesion_risk_beta": 2.45,
   "lesion_incidence_ages": [
     0,
@@ -94,7 +94,7 @@
   "tests": {
     "FIT": {
       "proportion": 1.0,
-      "routine_start": 50,
+      "routine_start": 45,
       "routine_end": 75,
       "routine_freq": 1,
       "specificity": 0.97,
@@ -184,7 +184,7 @@
     },
     "Colonoscopy": {
       "proportion": 0.0,
-      "routine_start": 50,
+      "routine_start": 45,
       "routine_end": 75,
       "routine_freq": 10,
       "specificity": 0.86,
@@ -280,9 +280,9 @@
   "diagnostic_test": "Colonoscopy",
   "surveillance_test": "Colonoscopy",
   "polypectomy_proportion_lethal": 2e-05,
-  "cost_discount_age": 50,
+  "cost_discount_age": 45,
   "cost_discount_rate": 0.03,
-  "lifespan_discount_age": 50,
+  "lifespan_discount_age": 45,
   "lifespan_discount_rate": 0.03,
   "death_rate_black_female_ages": [
     0,
