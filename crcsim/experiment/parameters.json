@@ -117,7 +117,7 @@
       "compliance_rate_given_prev_compliant":     [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ],
       "compliance_rate_given_not_prev_compliant": [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]  
     },
-    "Emergent_stool_test": {
+    "Emergent_stool": {
       "proportion": 0.0,
       "routine_start": 45,
       "routine_end": 75,
@@ -133,7 +133,7 @@
       "compliance_rate_given_prev_compliant":     [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ],
       "compliance_rate_given_not_prev_compliant": [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
     },
-    "Blood_test": {
+    "Blood": {
       "proportion": 0.0,
       "routine_start": 45,
       "routine_end": 75,
@@ -150,7 +150,7 @@
       "compliance_rate_given_not_prev_compliant": [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
     }
   },
-  "routine_tests": [ "FIT", "Colonoscopy", "FDNA", "Emergent_stool_test", "Blood_test" ],
+  "routine_tests": [ "FIT", "Colonoscopy", "FDNA", "Emergent_stool", "Blood" ],
   "diagnostic_test": "Colonoscopy",
   "surveillance_test": "Colonoscopy",
   "polypectomy_proportion_lethal": 0.00002,
