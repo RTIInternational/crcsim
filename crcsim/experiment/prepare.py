@@ -246,24 +246,18 @@ def create_scenarios() -> List[Scenario]:
         )
     )
 
-    #  100% screening and 50% diagnostic compliance. Use transform_diagnostic_compliance.
+    #  100% screening and 50% diagnostic compliance.
     scenarios.extend(
         create_scenarios_per_test(
             transformers=[
                 transform_initial_compliance(1.0),
-                transform_conditional_compliance_rates(
-                    ConditionalComplianceParam.PREV_COMPLIANT, rates
-                ),
-                transform_conditional_compliance_rates(
-                    ConditionalComplianceParam.NOT_PREV_COMPLIANT, rates
-                ),
                 transform_diagnostic_compliance(0.5),
             ],
             name_suffix="_100_screening_and_50_diagnostic_compliance",
         )
     )
 
-    #  100% screening and low screening cost. Use transform_test_cost.
+    #  100% screening and low screening cost.
     scenarios.extend(
         create_scenarios_per_test(
             transformers=[
@@ -277,7 +271,7 @@ def create_scenarios() -> List[Scenario]:
             name_suffix="_100_screening_and_low_screening_cost",
         )
     )
-    # 100% screening and high screening cost. Use transform_test_cost.
+    # 100% screening and high screening cost.
     scenarios.extend(
         create_scenarios_per_test(
             transformers=[
