@@ -70,7 +70,7 @@
 
   "tests": {
     "FIT": {
-      "proportion": 1.0,
+      "proportion": 0.0,
       "routine_start": 45,
       "routine_end": 75,
       "routine_freq": 1,

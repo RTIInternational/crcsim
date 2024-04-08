@@ -2,7 +2,7 @@ import json
 import random
 from enum import Enum, unique
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, TypedDict
 
 import fire
 
@@ -20,6 +20,11 @@ class Scenario:
         return self
 
 
+class ScenarioVariation(TypedDict):
+    name: str
+    freq: int
+
+
 @unique
 class ConditionalComplianceParam(Enum):
     PREV_COMPLIANT = "compliance_rate_given_prev_compliant"
@@ -30,6 +35,9 @@ class ConditionalComplianceParam(Enum):
 class Test(Enum):
     FIT = "FIT"
     COLONOSCOPY = "Colonoscopy"
+    FDNA = "FDNA"
+    EMERGENT_STOOL = "Emergent_stool"
+    BLOOD = "Blood"
 
 
 def prepare_experiment_dir(
@@ -99,49 +107,23 @@ def transform_initial_compliance(rate) -> Callable:
     return transform
 
 
+def transform_diagnostic_compliance(rate) -> Callable:
+    def transform(params):
+        params["diagnostic_compliance_rate"] = rate
+
+    return transform
+
+
 def transform_conditional_compliance_rates(
-    test: Test, param: ConditionalComplianceParam, rates: List[float]
+    param: ConditionalComplianceParam, rates: List[float]
 ) -> Callable:
     """
     Replaces a conditional compliance parameter with a new set of rates.
     """
 
     def transform(params):
-        params["tests"][test.value][param.value] = rates
-
-    return transform
-
-
-def transform_delayed_onset(test: Test, onset_age: int) -> Callable:
-    """
-    Transforms the necessary compliance parameters such that, for the given test,
-    compliance is 0.0 for all years before the given age, and 1.0 for all years
-    after the given age.
-    """
-
-    def transform(params):
-        start_age = params["tests"][test.value]["routine_start"]
-        # Testing years are inclusive, so add 1
-        testing_years = params["tests"][test.value]["routine_end"] - start_age + 1
-
-        # Initial compliance is 0
-        params["initial_compliance_rate"] = 0.0
-
-        # Then everyone remains noncompliant until the given age.
-        compliance_rate_given_not_prev_compliant = [0.0] * testing_years
-        onset_year = onset_age - start_age
-        compliance_rate_given_not_prev_compliant[onset_year] = 1.0
-        params["tests"][test.value][
-            "compliance_rate_given_not_prev_compliant"
-        ] = compliance_rate_given_not_prev_compliant
-
-        # Then everyone remains compliant after the given age.
-        # We can just set the compliance rate to 1.0 for all years, including those before
-        # the onset age, because initial compliance is 0.0.
-        compliance_rate_given_prev_compliant = [1.0] * testing_years
-        params["tests"][test.value][
-            "compliance_rate_given_prev_compliant"
-        ] = compliance_rate_given_prev_compliant
+        for test in params["tests"].keys():
+            params["tests"][test][param.value] = rates
 
     return transform
 
@@ -153,76 +135,96 @@ def transform_routine_freq(test: Test, freq: int) -> Callable:
     return transform
 
 
-def create_scenarios() -> List:
+def transform_routine_proportion(test: Test, proportion: float) -> Callable:
+    def transform(params):
+        params["tests"][test.value]["proportion"] = proportion
 
+    return transform
+
+
+def transform_test_cost(test: Test, cost: int) -> Callable:
+    def transform(params):
+        params["tests"][test.value]["cost"] = cost
+
+    return transform
+
+
+def create_scenarios() -> List[Scenario]:
     scenarios = []
 
-    # Scenarios: 100% FIT compliance
-    always_compliant = Scenario(
-        name="always_compliant", params=get_default_params()
-    ).transform(transform_initial_compliance(1.0))
-    scenarios.append(always_compliant)
+    def create_scenarios_per_test(
+        transformers: List[Callable], name_suffix: str
+    ) -> List[Scenario]:
+        """
+        This experiment consists of several blocks of scenarios. Each block consists
+        of the same set of routine tests. The blocks differ in compliance rates and/or
+        screening costs. This function creates a scenario for each test in a block to
+        avoid repeating this code for each block.
+        """
+        scenarios: List[Scenario] = []
 
-    # Scenarios: 0% FIT Compliance
-    never_compliant = Scenario(
-        name="never_compliant", params=get_default_params()
-    ).transform(transform_initial_compliance(0.0))
-    scenarios.append(never_compliant)
+        for test in Test:
+            scenario = Scenario(
+                name=test.value + name_suffix, params=get_default_params()
+            ).transform(transform_routine_proportion(test, 1.0))
+            scenarios.append(scenario)
 
-    # Scenarios: Delayed Onset Until Age 60
-    delayed_onset_60 = Scenario(
-        name="delayed_onset_60", params=get_default_params()
-    ).transform(transform_delayed_onset(Test.FIT, 60))
-    scenarios.append(delayed_onset_60)
+        # In addition to the default params for each test, we also want a few extra
+        # scenarios with variations on the routine frequency.
+        variations: Dict[Test, ScenarioVariation] = {
+            Test.FDNA: {"name": "FDNA_annual", "freq": 1},
+            Test.EMERGENT_STOOL: {"name": "Emergent_stool_3y", "freq": 3},
+            Test.BLOOD: {"name": "Blood_annual", "freq": 1},
+        }
 
-    # Scenarios: Delayed Onset Until Age 65
-    delayed_onset_65 = Scenario(
-        name="delayed_onset_65", params=get_default_params()
-    ).transform(transform_delayed_onset(Test.FIT, 65))
-    scenarios.append(delayed_onset_65)
+        for test, variation in variations.items():
+            scenario = (
+                Scenario(
+                    name=variation["name"] + name_suffix,
+                    params=get_default_params(),
+                )
+                .transform(transform_routine_proportion(test, 1.0))
+                .transform(transform_routine_freq(test, variation["freq"]))
+            )
+            scenarios.append(scenario)
 
-    # Scenario for every other year testing
-    every_two_years = Scenario(
-        name="every_two_years", params=get_default_params()
-    ).transform(transform_routine_freq(Test.FIT, 2))
-    scenarios.append(every_two_years)
+        for transformer in transformers:
+            scenarios = [s.transform(transformer) for s in scenarios]
 
-    # Scenario for every five years testing
-    every_five_years = Scenario(
-        name="every_five_years", params=get_default_params()
-    ).transform(transform_routine_freq(Test.FIT, 5))
-    scenarios.append(every_five_years)
+        return scenarios
 
-    # Scenario with 50% compliance every year
+    # 100% compliance
+    scenarios.extend(
+        create_scenarios_per_test(
+            transformers=[transform_initial_compliance(1.0)],
+            name_suffix="_100_compliance",
+        )
+    )
+
+    # TODO: repeat for 80, 50, and 30% compliance
+
+    # 100% to 40% descending compliance
     #
-    # Shorthand to create conditional compliance arrays without specifying each year.
-    # Conditional compliance arrays are length 26, one for each year of testing (50-75).
-    fifty_percent_compliance_rates = [0.5] * 26
-
-    fifty_percent_compliance = Scenario(
-        name="fifty_percent_compliance", params=get_default_params()
-    ).transform(
-        transform_conditional_compliance_rates(
-            Test.FIT,
-            ConditionalComplianceParam.PREV_COMPLIANT,
-            fifty_percent_compliance_rates,
+    # NOTE: This assumes that the same pattern of descending compliance over four
+    # years applies regardless of routine testing frequency.
+    #
+    # TBD whether this is actually the behavior we want.
+    rates = [1.0, 0.7, 0.4] + [0.0] * 23
+    scenarios.extend(
+        create_scenarios_per_test(
+            transformers=[
+                transform_initial_compliance(1.0),
+                transform_conditional_compliance_rates(
+                    ConditionalComplianceParam.PREV_COMPLIANT, rates
+                ),
+            ],
+            name_suffix="_100_to_40_compliance",
         )
     )
-    scenarios.append(fifty_percent_compliance)
 
-    # Scenario with 20% compliance every year
-    twenty_percent_compliance_rates = [0.2] * 26
+    # TODO: 100% screening and 50% diagnostic compliance. Use transform_diagnostic_compliance.
 
-    twenty_percent_compliance = Scenario(
-        name="twenty_percent_compliance", params=get_default_params()
-    ).transform(
-        transform_conditional_compliance_rates(
-            Test.FIT,
-            ConditionalComplianceParam.PREV_COMPLIANT,
-            twenty_percent_compliance_rates,
-        )
-    )
-    scenarios.append(twenty_percent_compliance)
+    # TODO: 100% screening and low/high screening cost. Use transform_test_cost.
 
     return scenarios
 
