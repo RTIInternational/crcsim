@@ -228,12 +228,7 @@ def create_scenarios() -> List[Scenario]:
     )
 
     # 100% to 40% descending compliance
-    #
-    # NOTE: This assumes that the same pattern of descending compliance over four
-    # years applies regardless of routine testing frequency.
-    #
-    # TBD whether this is actually the behavior we want.
-    rates = [1.0, 0.7, 0.4] + [0.0] * 23
+    rates = [1.0] * 10 + [0.7] * 10 + [0.4] * 10 + [0.0]
     scenarios.extend(
         create_scenarios_per_test(
             transformers=[
