@@ -149,6 +149,14 @@ def transform_test_cost(test: Test, cost: int) -> Callable:
     return transform
 
 
+def transform_routine_ages(test: Test, start_age: int, end_age: int) -> Callable:
+    def transform(params):
+        params["tests"][test.value]["routine_start"] = start_age
+        params["tests"][test.value]["routine_end"] = end_age
+
+    return transform
+
+
 def create_scenarios() -> List[Scenario]:
     scenarios = []
 
@@ -192,6 +200,14 @@ def create_scenarios() -> List[Scenario]:
             scenarios = [s.transform(transformer) for s in scenarios]
 
         return scenarios
+
+    # No screening
+    no_screening = (
+        Scenario(name="no_screening", params=get_default_params())
+        .transform(transform_routine_proportion(Test.FIT, 1.0))
+        .transform(transform_routine_ages(Test.FIT, -1, -1))
+    )
+    scenarios.append(no_screening)
 
     # 100% compliance
     scenarios.extend(
