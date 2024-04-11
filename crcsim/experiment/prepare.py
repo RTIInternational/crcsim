@@ -215,7 +215,7 @@ def create_scenarios() -> List:
             )
         )
         implementation_extra_low_cost.name = (
-            f"{fqhc}_implementation_low_initial_treat_cost"
+            f"{fqhc}_implementation_extra_low_initial_treat_cost"
         )
         scenarios.append(implementation_extra_low_cost)
 
