@@ -36,7 +36,7 @@ colorama==0.4.4
     # via awscli
 contourpy==1.1.1
     # via matplotlib
-crcsim @ git+https://github.com/RTIInternational/crcsim.git@10211220d1f38239ac5ec885d00ca7a515449399
+crcsim @ git+https://github.com/RTIInternational/crcsim.git@55312a08eb176556555ce5ecb99ba9628d0afc3e
     # via -r requirements.in
 cycler==0.12.0
     # via matplotlib
