@@ -98,7 +98,7 @@ def run(
     out.open()
 
     with open(cohort_file, mode="r") as input:
-        cohort = csv.DictReader(input)
+        cohort = list(csv.DictReader(input))
 
         # Draw expected lifespans for everyone in the cohort prior to starting
         # simulations. This is necessary to ensure that expected lifespans are

@@ -997,7 +997,6 @@ class Person:
     # on_end_year is just a wrapper for update_value - not necessary as far as I can tell
 
     def start_life_timer(self):
-        self.expected_lifespan = self.compute_lifespan()
         self.scheduler.add_event(
             message=PersonDiseaseMessage.OTHER_DEATH,
             handler=self.handle_disease_message,
