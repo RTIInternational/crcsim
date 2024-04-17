@@ -6,7 +6,7 @@ from typing import Callable, Dict, List, Optional
 import fire
 
 SEED: int = 49865106
-NUM_ITERATIONS: int = 100
+NUM_ITERATIONS: int = 10
 
 
 class Scenario:
@@ -92,12 +92,12 @@ def create_scenarios() -> List:
     initial_compliance = {
         "fqhc1": (0.522, 0.593),
         "fqhc2": (0.154, 0.421),
-        "fqhc3": (0.519, 0.615),
-        "fqhc4": (0.278, 0.374),
-        "fqhc5": (0.383, 0.572),
-        "fqhc6": (0.211, 0.392),
-        "fqhc7": (0.257, 0.354),
-        "fqhc8": (0.190, 0.390),
+        # "fqhc3": (0.519, 0.615),
+        # "fqhc4": (0.278, 0.374),
+        # "fqhc5": (0.383, 0.572),
+        # "fqhc6": (0.211, 0.392),
+        # "fqhc7": (0.257, 0.354),
+        # "fqhc8": (0.190, 0.390),
     }
 
     scenarios = []
