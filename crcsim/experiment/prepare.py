@@ -86,49 +86,32 @@ def transform_initial_compliance(rate) -> Callable:
     return transform
 
 
-def transform_FIT_routine_ages(age: int) -> Callable:
-    def transform(params):
-        for p in ["routine_start", "routine_end"]:
-            params["tests"]["FIT"][p] = age
-
-    return transform
-
-
-def transform_routine_test_proportion(test: str, proportion: float) -> Callable:
-    def transform(params):
-        params["tests"][test]["proportion"] = proportion
-
-    return transform
-
-
 def create_scenarios() -> List:
+    # For each health center, define the initial compliance rate in the baseline
+    # scenario and the implementation scenario.
+    initial_compliance = {
+        "fqhc1": (0.522, 0.593),
+        "fqhc2": (0.154, 0.421),
+        "fqhc3": (0.519, 0.615),
+        "fqhc4": (0.278, 0.374),
+        "fqhc5": (0.383, 0.572),
+        "fqhc6": (0.211, 0.392),
+        "fqhc7": (0.257, 0.354),
+        "fqhc8": (0.190, 0.390),
+    }
+
     scenarios = []
 
-    # No screening
-    #
-    # Start and end ages are enforced by skipping testing logic if simulation time is
-    # less than routine_start or greater than routine end. Setting both to -1 ensures
-    # that simulation time will always be greater than routine end, so no routine
-    # testing will ever be performed.
-    no_screening = Scenario(name="no_screening", params=get_default_params()).transform(
-        transform_FIT_routine_ages(-1)
-    )
-    scenarios.append(no_screening)
+    for fqhc, rates in initial_compliance.items():
+        baseline = Scenario(
+            name=f"{fqhc}_baseline", params=get_default_params()
+        ).transform(transform_initial_compliance(rates[0]))
+        scenarios.append(baseline)
 
-    # 100% routine test proportions
-    # Default parameters are already 100% FIT, so all we need to do there is adjust
-    # compliance.
-    all_fit = Scenario(name="all_FIT", params=get_default_params()).transform(
-        transform_initial_compliance(1.0)
-    )
-    scenarios.append(all_fit)
-
-    all_colonoscopy = Scenario(
-        name="all_colonoscopy", params=get_default_params()
-    ).transform(transform_initial_compliance(1.0))
-    all_colonoscopy.transform(transform_routine_test_proportion("FIT", 0.0))
-    all_colonoscopy.transform(transform_routine_test_proportion("Colonoscopy", 1.0))
-    scenarios.append(all_colonoscopy)
+        implementation = Scenario(
+            name=f"{fqhc}_implementation", params=get_default_params()
+        ).transform(transform_initial_compliance(rates[1]))
+        scenarios.append(implementation)
 
     return scenarios
 
