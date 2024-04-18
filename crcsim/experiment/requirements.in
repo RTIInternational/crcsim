@@ -1,5 +1,5 @@
 # Clone the specific commit of the model that you want to use for the experiment
-git+https://github.com/RTIInternational/crcsim.git@805cac52bf0b265aa5498ddbcb5044c81e0e75d7
+git+https://github.com/RTIInternational/crcsim.git@6c264ca5e35c1b9ae20a6e4b95818f6e00970d71
 
 fire
 pandas==2.1.1
