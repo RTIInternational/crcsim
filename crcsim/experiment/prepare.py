@@ -1,8 +1,8 @@
 import json
 import random
+from copy import deepcopy
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
-from copy import deepcopy
 
 import fire
 

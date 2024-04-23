@@ -970,11 +970,11 @@ class Analysis:
         """
         # Sum all of the person status arrays to get an array of counts of the number of
         # people in each status for each year.
-        statuses: np.ndarray = sum(status_arrays)
+        status_array: np.ndarray = sum(status_arrays)
 
         # Convert to DataFrame so we can index by column name
         statuses = pd.DataFrame(
-            statuses,
+            status_array,
             columns=[
                 "alive",
                 "crc_death",
