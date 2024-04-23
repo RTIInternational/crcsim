@@ -135,9 +135,11 @@
         0.8,
         0.8,
         0.8,
+        0.8,
         0.8
       ],
       "compliance_rate_given_not_prev_compliant": [
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -213,9 +215,11 @@
         1.0,
         1.0,
         1.0,
+        1.0,
         1.0
       ],
       "compliance_rate_given_not_prev_compliant": [
+        0.0,
         0.0,
         0.0,
         0.0,
