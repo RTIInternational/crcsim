@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Dict, List
 
 import boto3
 from botocore.config import Config
@@ -9,10 +10,10 @@ from crcsim.experiment.simulate import get_seed_list
 
 def get_failed_jobs(
     start_date: str, job_queue: str, batch_client: boto3.client
-) -> list:
+) -> List[Dict[str, str]]:
     """
-    Returns a list of dicts with the permutation number and table script number for each
-    failed job in the job queue.
+    Checks the given AWS Batch job queue for failed jobs created after the given
+    start date. Returns the senario and iteration for each failed job.
     """
     start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
     # convert to milliseconds to match the timestamp format returned by list_jobs
