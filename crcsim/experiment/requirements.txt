@@ -67,7 +67,9 @@ jmespath==1.0.1
 kiwisolver==1.4.5
     # via matplotlib
 matplotlib==3.8.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   seaborn
 multidict==6.0.4
     # via
     #   aiohttp
@@ -77,7 +79,8 @@ numpy==1.26.0
     #   contourpy
     #   matplotlib
     #   pandas
-openpyxl==3.0.9
+    #   seaborn
+openpyxl==3.1.2
     # via -r requirements.in
 packaging==23.2
     # via matplotlib
@@ -85,6 +88,7 @@ pandas==2.1.1
     # via
     #   -r requirements.in
     #   crcsim
+    #   seaborn
 pillow==10.0.1
     # via matplotlib
 pyasn1==0.5.0
@@ -108,6 +112,8 @@ s3transfer==0.6.2
     # via
     #   awscli
     #   boto3
+seaborn===0.13.2
+    # via -r requirements.in
 six==1.16.0
     # via
     #   fire
