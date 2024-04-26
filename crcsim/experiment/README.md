@@ -83,6 +83,8 @@ This step generates `summary/` and its contents:
 - `combined.csv` has one row per model run
 - `summarized.xlsx` includes summary statistics for each scenario. Scenarios are separated into three sheets, one for each sensitivity test.
 
+After running `summarize.py` you may also run `visualize.ipynb` to generate a plot of two key outcomes.
+
 ## AWS Architecture
 
 The architecture relies on four AWS services - Batch, CloudWatch, Elastic Container Registry (ECR), and S3. The role of each service is as follows.
