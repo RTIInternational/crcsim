@@ -1,17 +1,19 @@
 from datetime import datetime
+from typing import Dict, List
 
 import boto3
 from botocore.config import Config
+from fire import Fire
 
 from crcsim.experiment.simulate import get_seed_list
 
 
 def get_failed_jobs(
     start_date: str, job_queue: str, batch_client: boto3.client
-) -> list:
+) -> List[Dict[str, str]]:
     """
-    Returns a list of dicts with the permutation number and table script number for each
-    failed job in the job queue.
+    Checks the given AWS Batch job queue for failed jobs created after the given
+    start date. Returns the senario and iteration for each failed job.
     """
     start_datetime = datetime.strptime(start_date, "%Y-%m-%d")
     # convert to milliseconds to match the timestamp format returned by list_jobs
@@ -31,6 +33,7 @@ def get_failed_jobs(
 
 
 def main(
+    start_date: str,
     n_people: int = 100_000,
     job_queue: str = "crcsim",
     job_definition: str = "crcsim:3",
@@ -38,7 +41,7 @@ def main(
     my_config = Config(region_name="us-east-2")
     batch = boto3.client("batch", config=my_config)
 
-    failed_job_params = get_failed_jobs("2024-04-19", job_queue, batch)
+    failed_job_params = get_failed_jobs(start_date, job_queue, batch)
 
     seeds = get_seed_list()
 
@@ -67,4 +70,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main()
+    Fire(main)
