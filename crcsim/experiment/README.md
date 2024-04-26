@@ -73,6 +73,8 @@ Check the Batch console to see if any of the jobs failed. It is normal for a han
 
 If you have only a few failed jobs and the reason looks innocuous, the easiest solution is to rerun the jobs manually via the Batch console.
 
+If you have too many failed jobs to clone them manually, use `clone_failed_jobs.py` to clone all jobs that failed after a given date. 
+
 ### 6. Analyze the Results
 
 Once all jobs have completed, run `summarize.py` to analyze the combined results of the model runs. This script uses pandas and s3fs to read and write files directly from S3 without saving them to your local machine. Like `simulate.py`, `summarize.py` relies on the structure of `scenarios/` to determine the files it fetches from S3.
