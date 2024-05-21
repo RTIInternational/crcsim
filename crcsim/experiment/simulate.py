@@ -35,7 +35,7 @@ def get_seed_list() -> list:
 
 
 def run(
-    n_people: int = 100,
+    n_people: int = 100_000,
     job_queue: str = "crcsim",
     job_definition: str = "crcsim:3",
 ):
