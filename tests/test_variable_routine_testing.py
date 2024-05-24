@@ -18,6 +18,25 @@ from crcsim.parameters import StepFunction, load_params
 from crcsim.scheduler import Scheduler
 
 
+def test_testing_year_misalignment():
+    """
+    Asserts that misaligned testing years in routine_testing_year and a single test's
+    routine start or end raises an error.
+    """
+    # We load parameters.json here instead of using the params fixture because
+    # load_params has already been run in the fixture, which creates additional
+    # parameters of StepFunction type, and those are not JSON serializable.
+    with open("parameters.json", "r") as f:
+        params = json.load(f)
+        params["tests"]["Colonoscopy"]["routine_end"] = 85
+        with TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir) / "parameters.json"
+            with open(tmp_path, "w") as f:
+                json.dump(params, f)
+                with pytest.raises(ValueError):
+                    load_params(tmp_path)
+
+
 @pytest.fixture(scope="module")
 def params():
     """
@@ -42,7 +61,7 @@ def params():
 
     # We don't want any false positives for these tests, because we rely on each
     # person completing a normal course of routine testing without any diagnostic
-    # or surveillance testing. In the TestPerson class, we ensure that the person
+    # or surveillance testing. In the PersonForTests class, we ensure that the person
     # never has CRC; here we ensure that no routine test returns a false positive
     # and causes a diagnostic test.
     p["tests"]["FIT"]["specificity"] = 1
@@ -62,36 +81,13 @@ def params():
     return p
 
 
-@pytest.fixture(scope="module")
-def test_switching_scenarios(params):
-    """
-    These test switching scenarios are used to override the default params for some
-    tests.
-    """
-    routine_testing_year = params["routine_testing_year"]
-    return {
-        "one_colonoscopy_then_fit_v1": StepFunction(
-            routine_testing_year, ["Colonoscopy"] + ["FIT"] * 25
-        ),
-        "one_colonoscopy_then_fit_v2": StepFunction(
-            routine_testing_year, ["Colonoscopy"] * 10 + ["FIT"] * 16
-        ),
-        "ten_fit_then_colonoscopy": StepFunction(
-            routine_testing_year, ["FIT"] * 10 + ["Colonoscopy"] * 16
-        ),
-        "fit_then_colonoscopy_then_fit": StepFunction(
-            routine_testing_year, ["FIT"] * 5 + ["Colonoscopy"] * 1 + ["FIT"] * 20
-        ),
-    }
-
-
-class TestPerson(Person):
+class PersonForTests(Person):
     """
     Overrides or adds to the Person class in two ways that are crucial to these tests:
 
     1. Overrides the start method to ensure that the person never has CRC and lives to
        100, so they always complete the full course of routine testing.
-    2. Adds a simulate method to simulate one TestPerson at a time without running
+    2. Adds a simulate method to simulate one PersonForTests at a time without running
        the main simulation on a cohort of people.
 
     Also, for convenience, assigns attributes directly in __init__ so we don't have
@@ -144,7 +140,7 @@ class TestPerson(Person):
     def simulate(self):
         """
         Simplified version of the simulation loop used in crcsim.__main__.
-        Enables us to simulate one TestPerson at a time without running the
+        Enables us to simulate one PersonForTests at a time without running the
         main simulation on a cohort of people.
         """
         while not self.scheduler.is_empty():
@@ -158,96 +154,56 @@ class TestPerson(Person):
             handler(event.message)
 
 
-def test_testing_year_misalignment(params):
+@pytest.mark.parametrize(
+    "case",
+    [
+        # Switches to FIT at age 51, but they shouldn't get a FIT test until age 60
+        # because they had a colonoscopy at age 50.
+        {
+            "routine_test_by_year": ["Colonoscopy"] + ["FIT"] * 25,
+            "expected_colonoscopies": 1,
+            "expected_fits": 16,
+        },
+        # Switches to FIT at age 60, and they should get a FIT test that year,
+        # because the last colonoscopy was at age 50.
+        {
+            "routine_test_by_year": ["Colonoscopy"] * 10 + ["FIT"] * 16,
+            "expected_colonoscopies": 1,
+            "expected_fits": 16,
+        },
+        # Gets a FIT test every year from age 50 to 59, then a colonoscopy at age 60
+        # and 70. They will be due for a third colonoscopy at age 80, but routine
+        # testing ends at age 75.
+        {
+            "routine_test_by_year": ["FIT"] * 10 + ["Colonoscopy"] * 16,
+            "expected_colonoscopies": 2,
+            "expected_fits": 10,
+        },
+        # Gets a FIT test every year from age 50 to 54, then a colonoscopy at age 55,
+        # then a FIT test every year from age 65 to 75 (in total, one colonoscopy and
+        # 16 FIT tests)
+        {
+            "routine_test_by_year": ["FIT"] * 5 + ["Colonoscopy"] * 1 + ["FIT"] * 20,
+            "expected_colonoscopies": 1,
+            "expected_fits": 16,
+        },
+    ],
+)
+def test_switching_scenario(params, case):
     """
-    Asserts that misaligned testing years in routine_testing_year and a single test's
-    routine start or end raises an error.
+    Asserts that the routine_test_by_year sequences parametrized in the test cases
+    result in the expected number of colonoscopies and FIT tests.
     """
-    with open("parameters.json", "r") as f:
-        params = json.load(f)
-        params["tests"]["Colonoscopy"]["routine_end"] = 85
-        with TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir) / "parameters.json"
-            with open(tmp_path, "w") as f:
-                json.dump(params, f)
-                with pytest.raises(ValueError):
-                    load_params(tmp_path)
-
-
-def test_one_colonoscopy_equivalence(params, test_switching_scenarios):
-    """
-    Asserts that the one_colonoscopy_then_fit_v1 and one_colonoscopy_then_fit_v2
-    test switching scenarios both result in one colonoscopy and 16 FIT tests for
-    a person with 100% compliance. This tests whether the logic in
-    crcsim.agent.Person.do_tests, which requires the person to be due for *every*
-    routine test, works in the test switching context. P1 switches to FIT at age
-    51, but they shouldn't get a FIT test until age 60 because they had a
-    colonoscopy at age 50. P2 switches to FIT at age 60, and they should get a FIT
-    test that year.
-    """
-    params_one_colonoscopy_v1 = deepcopy(params)
-    params_one_colonoscopy_v1["variable_routine_test"] = test_switching_scenarios[
-        "one_colonoscopy_then_fit_v1"
-    ]
-
-    params_one_colonoscopy_v2 = deepcopy(params)
-    params_one_colonoscopy_v2["variable_routine_test"] = test_switching_scenarios[
-        "one_colonoscopy_then_fit_v2"
-    ]
-
-    p1 = TestPerson(
-        id=None,
-        sex=None,
-        race_ethnicity=None,
-        params=params_one_colonoscopy_v1,
-        scheduler=None,
-        rng=None,
-        out=None,
+    params_ = deepcopy(params)
+    params_["variable_routine_test"] = StepFunction(
+        params["routine_testing_year"], case["routine_test_by_year"]
     )
-    p1.start()
-    p1.simulate()
 
-    p2 = TestPerson(
+    p = PersonForTests(
         id=None,
         sex=None,
         race_ethnicity=None,
-        params=params_one_colonoscopy_v1,
-        scheduler=None,
-        rng=None,
-        out=None,
-    )
-    p2.start()
-    p2.simulate()
-
-    # Assert that both people have one colonoscopy and 16 FIT tests
-    for person in [p1, p2]:
-        tests = [
-            row for row in person.out.rows if row["record_type"] == "test_performed"
-        ]
-        colonoscopies = [test for test in tests if test["test_name"] == "Colonoscopy"]
-        fits = [test for test in tests if test["test_name"] == "FIT"]
-        assert len(colonoscopies) == 1
-        assert len(fits) == 16
-
-
-def test_ten_fit_then_colonoscopy(params, test_switching_scenarios):
-    """
-    Asserts that the ten_fit_then_colonoscopy test switching scenario results in
-    ten FIT tests and two colonoscopies for a person with 100% compliance. In this
-    scenario, the person should get a FIT test every year from age 50 to 59, then a
-    colonoscopy at age 60 and 70. They will be due for a third colonoscopy at age 80,
-    but routine testing ends at age 75.
-    """
-    params_ten_fit = deepcopy(params)
-    params_ten_fit["variable_routine_test"] = test_switching_scenarios[
-        "ten_fit_then_colonoscopy"
-    ]
-
-    p = TestPerson(
-        id=None,
-        sex=None,
-        race_ethnicity=None,
-        params=params_ten_fit,
+        params=params_,
         scheduler=None,
         rng=None,
         out=None,
@@ -258,38 +214,5 @@ def test_ten_fit_then_colonoscopy(params, test_switching_scenarios):
     tests = [row for row in p.out.rows if row["record_type"] == "test_performed"]
     colonoscopies = [test for test in tests if test["test_name"] == "Colonoscopy"]
     fits = [test for test in tests if test["test_name"] == "FIT"]
-    assert len(colonoscopies) == 2
-    assert len(fits) == 10
-
-
-def test_fit_then_colonoscopy_then_fit(params, test_switching_scenarios):
-    """
-    Asserts that the fit_then_colonoscopy_then_fit test switching scenario results in
-    five FIT tests, one colonoscopy, then 11 FIT tests for a person with 100% compliance.
-    In this scenario, the person should get a FIT test every year from age 50 to 54, then a
-    colonoscopy at age 55, then a FIT test every year from age 65 to 75 (in total, one
-    colonoscopy and 16 FIT tests).
-    """
-    params_fit_then_colonoscopy = deepcopy(params)
-    params_fit_then_colonoscopy["variable_routine_test"] = test_switching_scenarios[
-        "fit_then_colonoscopy_then_fit"
-    ]
-
-    p = TestPerson(
-        id=None,
-        sex=None,
-        race_ethnicity=None,
-        params=params_fit_then_colonoscopy,
-        scheduler=None,
-        rng=None,
-        out=None,
-    )
-    p.start()
-    p.simulate()
-
-    tests = [row for row in p.out.rows if row["record_type"] == "test_performed"]
-    colonoscopies = [test for test in tests if test["test_name"] == "Colonoscopy"]
-    fits = [test for test in tests if test["test_name"] == "FIT"]
-    assert len(colonoscopies) == 1
-    assert len(fits) == 16
-    assert len(fits) == 16
+    assert len(colonoscopies) == case["expected_colonoscopies"]
+    assert len(fits) == case["expected_fits"]
