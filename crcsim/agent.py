@@ -1601,8 +1601,8 @@ class Person:
             # their lifetime. In this case, we assign the routine test for each year
             # rather than choosing a single routine test at initiatilization.
             #
-            # Note that indexing self.params["routine_testing_year"] will always
-            # return the min/max testing year, because crcsim.parameters raises an
+            # Indices 0 and -1 of self.params["routine_testing_year"] safely return
+            # the min and max testing years, because crcsim.parameters raises an
             # error if this parameter is not sorted in increasing order.
             if (
                 self.scheduler.time >= self.params["routine_testing_year"][0]
