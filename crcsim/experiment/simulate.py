@@ -1,8 +1,7 @@
 from pathlib import Path
-
 import boto3
 import fire
-
+import re
 
 def get_scenario_list() -> list:
     """
@@ -17,22 +16,26 @@ def get_scenario_list() -> list:
                 params.json
     """
     scenarios = []
-
     for results_file in Path("./scenarios").glob("*/params.json"):
         scenarios.append(results_file.parent.name)
-
     return scenarios
-
 
 def get_seed_list() -> list:
     """
-    Generate a list of integer seeds from ./scenarios/seeds.txt. Assumes seeds.txt has
-    one seed per line.
+    Generate a list of integer seeds from ./scenarios/seeds.txt.
+    Assumes seeds.txt has one seed per line.
     """
     with open(Path("./scenarios/seeds.txt")) as f:
         seeds = f.read().splitlines()
     return seeds
 
+def sanitize_job_name(job_name: str) -> str:
+    """
+    Sanitize the job name to match the valid pattern required by AWS Batch.
+    """
+    sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', job_name)
+    sanitized_name = sanitized_name[:128]
+    return sanitized_name
 
 def run(
     n_people: int = 100_000,
@@ -41,15 +44,16 @@ def run(
 ):
     scenarios = get_scenario_list()
     seeds = get_seed_list()
-
     batch = boto3.client("batch")
 
     for scenario in scenarios:
         for iteration, seed in enumerate(seeds):
             iteration_name = f"{iteration:03}"
+            job_name = f"{scenario}_{iteration_name}"
+            sanitized_job_name = sanitize_job_name(job_name)
 
             job = batch.submit_job(
-                jobName=scenario + f"_{iteration_name}",
+                jobName=sanitized_job_name,
                 jobQueue=job_queue,
                 jobDefinition=job_definition,
                 parameters={
@@ -63,11 +67,8 @@ def run(
                 f"Submitting iteration {iteration_name} for scenario {scenario}, Job ID {job['jobId']}"
             )
 
-
 def main():
     fire.Fire(run)
 
-
 if __name__ == "__main__":
-    test = ""
     main()
