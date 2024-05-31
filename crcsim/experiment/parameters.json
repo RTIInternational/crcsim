@@ -23,7 +23,7 @@
   "proportion_survive_clin3": 0,
   "proportion_survive_clin4": 0,
 
-  "cost_polypectomy": 170,
+  "cost_polypectomy": 432,
   "cost_polyp_pathology": 65,
 
   "cost_treatment_stage1_initial": 34258,
@@ -95,7 +95,7 @@
       "sensitivity_polyp2": 0.85,
       "sensitivity_polyp3": 0.95,
       "sensitivity_cancer": 0.95,
-      "cost": 700,
+      "cost": 912,
       "proportion_perforation": 0.001,
       "cost_perforation": 6487,
       "compliance_rate_given_prev_compliant":     [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ],

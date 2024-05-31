@@ -24,4 +24,3 @@ crc-analyze \
     --params-file=./params.json &&
 
 aws s3 cp ./results.csv "s3://crcsim-exp-crccp-sensitivity01/scenarios/$scenario/results_$iteration.csv"
-aws s3 cp ./output.csv "s3://crcsim-exp-crccp-sensitivity01/scenarios/$scenario/output_$iteration.csv"

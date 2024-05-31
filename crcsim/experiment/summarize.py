@@ -11,15 +11,14 @@ S3_BUCKET_NAME = "crcsim-exp-crccp-sensitivity01"
 def main() -> None:
     summary_dir = Path("./summary")
     summary_dir.mkdir(exist_ok=True, parents=True)
-
     combined = combine_run_results()
     combined.to_csv(summary_dir / "combined.csv", index=False)
-
     df = add_derived_variables(combined)
-    summary = summarize_results(df)
+    summary, summary_subset = summarize_results(df)
 
     with pd.ExcelWriter(summary_dir / "summarized.xlsx", engine="openpyxl") as writer:
-        summary.to_excel(writer, index=False)
+        summary.to_excel(writer, sheet_name="All Columns", index=False)
+        summary_subset.to_excel(writer, sheet_name="Select Columns", index=False)
 
 
 def get_scenario_list() -> list:
@@ -67,7 +66,7 @@ def combine_run_results() -> pd.DataFrame:
             iteration_name = f"{iteration:03}"
 
             print(f"Fetching results for {scenario}, iteration {iteration_name}")
-            
+
             df = pd.read_csv(
                 f"s3://{S3_BUCKET_NAME}/scenarios/{scenario}/results_{iteration_name}.csv"
             )
@@ -119,21 +118,52 @@ def add_derived_variables(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Compute the mean and standard deviation of every analysis variable, by
-    scenario.
-    """
+    """ Compute the mean and standard deviation of every analysis variable, by scenario. """
     groups = df.groupby("scenario")
     means = groups.mean()
     stds = groups.std()
-
     means.columns = [f"{c}_mean" for c in means.columns]
     stds.columns = [f"{c}_std" for c in stds.columns]
-
     interleaved_columns = chain.from_iterable(zip(means.columns, stds.columns))
     summary = pd.concat([means, stds], axis="columns")[interleaved_columns]
+    summary = summary.reset_index()
 
-    return summary.reset_index()
+    # Create a second sheet with select columns
+    select_columns = ["scenario", 
+        "Colonoscopy_performed_diagnostic_per_1k_40yo_mean", 
+        "Colonoscopy_performed_surveillance_per_1k_40yo_mean",
+        "FIT_performed_routine_per_1k_40yo_mean", 
+        "clin_crc_per_1k_40yo_mean",
+        "deadcrc_per_1k_40yo_mean", 
+        "lifeobs_if_unscreened_undiagnosed_at_40_mean",
+        "discounted_cost_routine_mean",
+        "discounted_cost_diagnostic_mean",
+        "discounted_cost_surveillance_mean",
+        "discounted_cost_treatment_initial_mean",
+        "discounted_cost_treatment_ongoing_mean",
+        "discounted_cost_treatment_terminal_mean",
+        "cost_routine_mean",
+        "cost_diagnostic_mean",
+        "cost_surveillance_mean",
+        "cost_treatment_initial_mean",
+        "cost_treatment_ongoing_mean",
+        "cost_treatment_terminal_mean",
+        "discounted_cost_routine_per_1k_40yo_mean",
+        "discounted_cost_diagnostic_per_1k_40yo_mean",
+        "discounted_cost_surveillance_per_1k_40yo_mean",
+        "discounted_cost_treatment_initial_per_1k_40yo_mean",
+        "discounted_cost_treatment_ongoing_per_1k_40yo_mean",
+        "discounted_cost_treatment_terminal_per_1k_40yo_mean",
+        "cost_routine_per_1k_40yo_mean",
+        "cost_diagnostic_per_1k_40yo_mean",
+        "cost_surveillance_per_1k_40yo_mean",
+        "cost_treatment_initial_per_1k_40yo_mean",
+        "cost_treatment_ongoing_per_1k_40yo_mean",
+        "cost_treatment_terminal_per_1k_40yo_mean",
+        "discounted_lifeobs_if_unscreened_undiagnosed_at_40_mean"]
+    summary_subset = summary[select_columns]
+
+    return summary, summary_subset
 
 
 if __name__ == "__main__":
