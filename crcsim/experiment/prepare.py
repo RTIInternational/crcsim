@@ -209,17 +209,30 @@ def create_scenarios() -> List[Scenario]:
     )
     scenarios.append(no_screening)
 
-    # Simple random compliance scenarios
-    compliance_rates = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    for compliance_rate in compliance_rates:
+    # Simple random screening compliance scenarios
+    screening_compliance_rates = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    for compliance_rate in screening_compliance_rates:
         scenarios.extend(
             create_scenarios_per_test(
                 transformers=[
                     transform_initial_compliance(compliance_rate),
                 ],
-                name_suffix=f"_random_compliance_{compliance_rate}",
+                name_suffix=f"_random_screening_compliance_{compliance_rate}",
             )
         )
+
+    # Simple random diagnostic compliance scenarios
+    diagnostic_compliance_rates = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    for compliance_rate in diagnostic_compliance_rates:
+        scenarios.extend(
+        create_scenarios_per_test(
+            transformers=[
+                transform_diagnostic_compliance(compliance_rate),
+            ],
+            name_suffix=f"_random_diagnostic_compliance_{compliance_rate}",
+        )
+    )
+
     return scenarios
 
 
