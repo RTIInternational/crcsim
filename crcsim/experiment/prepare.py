@@ -34,9 +34,8 @@ class ConditionalComplianceParam(Enum):
 @unique
 class Test(Enum):
     FIT = "FIT"
-    COLONOSCOPY = "Colonoscopy"
+    #COLONOSCOPY = "Colonoscopy"
     FDNA = "FDNA"
-    EMERGENT_STOOL = "Emergent_stool"
     BLOOD = "Blood"
 
 
@@ -127,20 +126,17 @@ def transform_conditional_compliance_rates(
 
     return transform
 
-
 def transform_routine_freq(test: Test, freq: int) -> Callable:
     def transform(params):
         params["tests"][test.value]["routine_freq"] = freq
 
     return transform
 
-
 def transform_routine_proportion(test: Test, proportion: float) -> Callable:
     def transform(params):
         params["tests"][test.value]["proportion"] = proportion
 
     return transform
-
 
 def transform_test_cost(test: Test, cost: int) -> Callable:
     def transform(params):
@@ -170,7 +166,7 @@ def create_scenarios() -> List[Scenario]:
         avoid repeating this code for each block.
         """
         scenarios: List[Scenario] = []
-
+        
         for test in Test:
             scenario = Scenario(
                 name=test.value + name_suffix, params=get_default_params()
@@ -181,7 +177,6 @@ def create_scenarios() -> List[Scenario]:
         # scenarios with variations on the routine frequency.
         variations: Dict[Test, ScenarioVariation] = {
             Test.FDNA: {"name": "FDNA_annual", "freq": 1},
-            Test.EMERGENT_STOOL: {"name": "Emergent_stool_3y", "freq": 3},
             Test.BLOOD: {"name": "Blood_annual", "freq": 1},
         }
 
@@ -210,29 +205,44 @@ def create_scenarios() -> List[Scenario]:
     scenarios.append(no_screening)
 
     # Simple random screening compliance scenarios
-    screening_compliance_rates = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    screening_compliance_rates = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     for compliance_rate in screening_compliance_rates:
         scenarios.extend(
             create_scenarios_per_test(
                 transformers=[
                     transform_initial_compliance(compliance_rate),
                 ],
-                name_suffix=f"_random_screening_compliance_{compliance_rate}",
+                name_suffix=f"_screening_compliance_{compliance_rate * 100}",
             )
         )
 
-    # Simple random diagnostic compliance scenarios
-    diagnostic_compliance_rates = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    for compliance_rate in diagnostic_compliance_rates:
-        scenarios.extend(
-        create_scenarios_per_test(
-            transformers=[
-                transform_diagnostic_compliance(compliance_rate),
+    # Diagnostic compliance scenarios for 50% and 80% screening compliance rates
+    diagnostic_compliance_rates = [0.5, 0.8]
+    for screening_compliance_rate in [0.5, 0.8]:
+        for diagnostic_compliance_rate in diagnostic_compliance_rates:
+            scenarios.extend(
+                create_scenarios_per_test(
+                    transformers=[
+                        transform_initial_compliance(screening_compliance_rate),
+                        transform_diagnostic_compliance(diagnostic_compliance_rate),
             ],
-            name_suffix=f"_random_diagnostic_compliance_{compliance_rate}",
+            name_suffix=f"_{int(screening_compliance_rate * 100)}_screening_and_{int(diagnostic_compliance_rate * 100)}_diagnostic_compliance",
         )
     )
 
+    # Diagnostic compliance scenarios for 100% screening compliance rate
+    diagnostic_compliance_rates = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    for diagnostic_compliance_rate in diagnostic_compliance_rates:
+        scenarios.extend(
+            create_scenarios_per_test(
+                transformers=[
+                    transform_initial_compliance(1.0),
+                    transform_diagnostic_compliance(diagnostic_compliance_rate),
+            ],
+            name_suffix=f"_diagnostic_compliance_{int(diagnostic_compliance_rate * 100)}",
+        )
+    )
+    
     return scenarios
 
 
