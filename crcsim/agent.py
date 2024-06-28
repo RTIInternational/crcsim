@@ -872,6 +872,23 @@ class Person:
         self.diagnostic_test = self.params["diagnostic_test"]
         self.surveillance_test = self.params["surveillance_test"]
 
+        if self.params["use_variable_routine_test"]:
+            # If the simulation is using variable routine tests, then we do not pick
+            # a single routine test for each person. Instead, we will refer to the
+            # routine_testing_year and routine_test_by_year parameters to determine
+            # which test to use each year. This allows a person to switch tests during
+            # their lifetime. We still assign the routine_test attribute here to
+            # avoid errors from yearly actions that expect a person to have a routine
+            # test attribute.
+            starting_test = self.params["routine_test_by_year"][0]
+            self.routine_test = starting_test
+            self.out.add_routine_test_chosen(
+                person_id=self.id,
+                test_name=starting_test,
+                time=self.scheduler.time,
+            )
+            return
+
         # Choose the routine test based on proportions specified in
         # parameters file.
         #
@@ -903,6 +920,7 @@ class Person:
                 self.out.add_routine_test_chosen(
                     person_id=self.id,
                     test_name=test,
+                    time=self.scheduler.time,
                 )
                 break
 
@@ -1576,6 +1594,29 @@ class Person:
             )
 
     def handle_yearly_actions(self, message="Conduct yearly actions"):
+        if self.params["use_variable_routine_test"]:
+            # If the simulation is using variable routine tests, then the parameters
+            # specify a single routine test that every person in the simulation will
+            # use for each testing year. This allows a person to switch tests during
+            # their lifetime. In this case, we assign the routine test for each year
+            # rather than choosing a single routine test at initiatilization.
+            #
+            # Indices 0 and -1 of self.params["routine_testing_year"] safely return
+            # the min and max testing years, because crcsim.parameters raises an
+            # error if this parameter is not sorted in increasing order.
+            if (
+                self.scheduler.time >= self.params["routine_testing_year"][0]
+                and self.scheduler.time <= self.params["routine_testing_year"][-1]
+            ):
+                self.routine_test = self.params["variable_routine_test"](
+                    self.scheduler.time
+                )
+                self.out.add_routine_test_chosen(
+                    person_id=self.id,
+                    test_name=self.routine_test,
+                    time=self.scheduler.time,
+                )
+
         self.do_tests()
 
         self.scheduler.add_event(
