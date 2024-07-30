@@ -113,7 +113,38 @@ def add_derived_variables(df: pd.DataFrame) -> pd.DataFrame:
         + df["discounted_cost_treatment"]
     )
 
+    df["cost_treatment_per_1k_40yo"] = (
+        df["cost_treatment_initial_per_1k_40yo"]
+        + df["cost_treatment_ongoing_per_1k_40yo"]
+        + df["cost_treatment_terminal_per_1k_40yo"]
+    )
+
+    df["discounted_cost_treatment_per_1k_40yo"] = (
+        df["discounted_cost_treatment_initial_per_1k_40yo"]
+        + df["discounted_cost_treatment_ongoing_per_1k_40yo"]
+        + df["discounted_cost_treatment_terminal_per_1k_40yo"]
+    )
+
+    df["cost_total_per_1k_40yo"] = (
+        df["cost_routine_per_1k_40yo"]
+        + df["cost_diagnostic_per_1k_40yo"]
+        + df["cost_surveillance_per_1k_40yo"]
+        + df["cost_treatment_per_1k_40yo"]
+    )
+
+    df["discounted_cost_total_per_1k_40yo"] = (
+        df["discounted_cost_routine_per_1k_40yo"]
+        + df["discounted_cost_diagnostic_per_1k_40yo"]
+        + df["discounted_cost_surveillance_per_1k_40yo"]
+        + df["discounted_cost_treatment_per_1k_40yo"]
+    )
+
+    df["total_colonoscopy"] = (
+        df["Colonoscopy_performed_diagnostic_per_1k_40yo_mean"] + df["Colonoscopy_performed_surveillance_per_1k_40yo_mean"]
+    )
+
     return df
+
 
 
 def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
@@ -131,6 +162,7 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
     select_columns = ["scenario", 
         "Colonoscopy_performed_diagnostic_per_1k_40yo_mean", 
         "Colonoscopy_performed_surveillance_per_1k_40yo_mean",
+        "total_colonoscopy",
         "FIT_performed_routine_per_1k_40yo_mean", 
         "clin_crc_per_1k_40yo_mean",
         "deadcrc_per_1k_40yo_mean", 
@@ -141,25 +173,34 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
         "discounted_cost_treatment_initial_mean",
         "discounted_cost_treatment_ongoing_mean",
         "discounted_cost_treatment_terminal_mean",
+        "discounted_cost_treatment",
+        "discounted_cost_total",
         "cost_routine_mean",
         "cost_diagnostic_mean",
         "cost_surveillance_mean",
         "cost_treatment_initial_mean",
         "cost_treatment_ongoing_mean",
         "cost_treatment_terminal_mean",
+        "cost_treatment",
+        "cost_total",
         "discounted_cost_routine_per_1k_40yo_mean",
         "discounted_cost_diagnostic_per_1k_40yo_mean",
         "discounted_cost_surveillance_per_1k_40yo_mean",
         "discounted_cost_treatment_initial_per_1k_40yo_mean",
         "discounted_cost_treatment_ongoing_per_1k_40yo_mean",
         "discounted_cost_treatment_terminal_per_1k_40yo_mean",
+        "discounted_cost_treatment_per_1k_40yo_mean",
+        "discounted_cost_total_per_1k_40yo",
         "cost_routine_per_1k_40yo_mean",
         "cost_diagnostic_per_1k_40yo_mean",
         "cost_surveillance_per_1k_40yo_mean",
         "cost_treatment_initial_per_1k_40yo_mean",
         "cost_treatment_ongoing_per_1k_40yo_mean",
         "cost_treatment_terminal_per_1k_40yo_mean",
+        "cost_treatment_per_1k_40yo_mean",
+        "cost_total_per_1k_40yo",
         "discounted_lifeobs_if_unscreened_undiagnosed_at_40_mean"]
+    
     summary_subset = summary[select_columns]
 
     return summary, summary_subset
