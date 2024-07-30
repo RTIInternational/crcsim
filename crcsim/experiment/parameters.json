@@ -23,7 +23,7 @@
   "proportion_survive_clin3": 0,
   "proportion_survive_clin4": 0,
 
-  "cost_polypectomy": 170,
+  "cost_polypectomy": 432,
   "cost_polyp_pathology": 65,
 
   "cost_treatment_stage1_initial": 34258,
@@ -70,7 +70,7 @@
 
   "tests": {
     "FIT": {
-      "proportion": 1.0,
+      "proportion": 0.0,
       "routine_start": 45,
       "routine_end": 75,
       "routine_freq": 1,
@@ -79,7 +79,7 @@
       "sensitivity_polyp2": 0.07,
       "sensitivity_polyp3": 0.22,
       "sensitivity_cancer": 0.74,
-      "cost": 22,
+      "cost": 42,
       "proportion_perforation": 0,
       "cost_perforation": 0,
       "compliance_rate_given_prev_compliant":     [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ],
@@ -97,12 +97,44 @@
       "sensitivity_cancer": 0.95,
       "cost": 700,
       "proportion_perforation": 0.001,
-      "cost_perforation": 6487,
+      "cost_perforation": 14115,
+      "compliance_rate_given_prev_compliant":     [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ],
+      "compliance_rate_given_not_prev_compliant": [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
+    },
+    "FDNA": {
+      "proportion": 0.0,
+      "routine_start": 45,
+      "routine_end": 75,
+      "routine_freq": 3,
+      "specificity": 0.91,
+      "sensitivity_polyp1": 0.15,
+      "sensitivity_polyp2": 0.15,
+      "sensitivity_polyp3": 0.43,
+      "sensitivity_cancer": 0.94,
+      "cost": 512,
+      "proportion_perforation": 0,
+      "cost_perforation": 0,
+      "compliance_rate_given_prev_compliant":     [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ],
+      "compliance_rate_given_not_prev_compliant": [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]  
+    },
+    "Blood": {
+      "proportion": 0.0,
+      "routine_start": 45,
+      "routine_end": 75,
+      "routine_freq": 3,
+      "specificity": 0.90,
+      "sensitivity_polyp1": 0,
+      "sensitivity_polyp2": 0,
+      "sensitivity_polyp3": 0.13,
+      "sensitivity_cancer": 0.83,
+      "cost": 895,
+      "proportion_perforation": 0,
+      "cost_perforation": 0,
       "compliance_rate_given_prev_compliant":     [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 ],
       "compliance_rate_given_not_prev_compliant": [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]
     }
   },
-  "routine_tests": [ "FIT", "Colonoscopy" ],
+  "routine_tests": [ "FIT", "Colonoscopy", "FDNA", "Blood" ],
   "diagnostic_test": "Colonoscopy",
   "surveillance_test": "Colonoscopy",
   "polypectomy_proportion_lethal": 0.00002,
