@@ -4,7 +4,6 @@ from pathlib import Path
 import pandas as pd
 import s3fs  # noqa: F401
 
-
 S3_BUCKET_NAME = "crcsim-exp-crccp-sensitivity01"
 
 
@@ -66,14 +65,18 @@ def combine_run_results() -> pd.DataFrame:
             iteration_name = f"{iteration:03}"
 
             print(f"Fetching results for {scenario}, iteration {iteration_name}")
-
-            df = pd.read_csv(
-                f"s3://{S3_BUCKET_NAME}/scenarios/{scenario}/results_{iteration_name}.csv"
-            )
-            df["scenario"] = scenario
-            df["iteration"] = iteration
-
-            dfs.append(df)
+            
+            try:
+                df = pd.read_csv(
+                    f"s3://{S3_BUCKET_NAME}/scenarios/{scenario}/results_{iteration_name}.csv"
+                )
+                df["scenario"] = scenario
+                df["iteration"] = iteration
+                dfs.append(df)
+            except FileNotFoundError:
+                print(
+                    f"Results file not found for {scenario}, iteration {iteration_name}"
+                )
 
     if len(dfs) == 0:
         raise RuntimeError("No simulation results files were found")
@@ -118,6 +121,7 @@ def add_derived_variables(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
+
     """ Compute the mean and standard deviation of every analysis variable, by scenario. """
     groups = df.groupby("scenario")
     means = groups.mean()

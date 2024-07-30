@@ -87,43 +87,6 @@ def transform_initial_compliance(rate) -> Callable:
     return transform
 
 
-def transform_treatment_cost(stage: str, phase: str, value: int) -> Callable:
-    def transform(params):
-        params[f"cost_treatment_stage{stage}_{phase}"] = value
-
-    return transform
-
-
-def transform_repeat_compliance(rate: float, test: str) -> Callable:
-    def transform(params):
-        params["tests"][test]["compliance_rate_given_prev_compliant"] = [
-            rate for _ in params["tests"][test]["compliance_rate_given_prev_compliant"]
-        ]
-
-    return transform
-
-
-def transform_diagnostic_compliance(rate) -> Callable:
-    def transform(params):
-        params["diagnostic_compliance_rate"] = rate
-
-    return transform
-
-
-def transform_surveillance_frequency(stage: str, frequency: int) -> Callable:
-    def transform(params):
-        params[f"surveillance_freq_{stage}"] = frequency
-
-    return transform
-
-
-def transform_surveillance_end_age(age: int) -> Callable:
-    def transform(params):
-        params["surveillance_end_age"] = age
-
-    return transform
-
-
 def create_scenarios() -> List:
     # For each health center, define the initial compliance rate in the baseline
     # scenario and the implementation scenario.
