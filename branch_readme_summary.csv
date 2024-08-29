@@ -1,0 +1,20 @@
+Branch,README First Line
+HEAD -> main,# CRC model simulator
+consistent-expected-lifespans,# CRC model simulator
+diagnostic-compliance,# CRC model simulator
+exp-consistent-lifespans,# CRC model simulator
+exp-consistent-summary,# CRC model simulator
+exp-crccp-fqhc-scenarios,# CRC model simulator
+exp-crccp-replication,# CRC model simulator
+exp-crccp-sensitivity-private,# CRC model simulator
+exp-crccp-sensitivity_01,# CRC model simulator
+exp-crccp-sensitivity_02,# CRC model simulator
+exp-random-compliance-runs,# CRC model simulator
+exp-replicate-on-impl-aws,# CRC model simulator
+exp-routine-compliance-runs,# CRC model simulator
+exp-test-patterns,# CRC model simulator
+experiment,# CRC model simulator
+experiment-template,# CRC model simulator
+main,# CRC model simulator
+pandas-2-bugfix,# CRC model simulator
+test-switching,# CRC model simulator

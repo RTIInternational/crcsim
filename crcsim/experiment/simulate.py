@@ -1,7 +1,9 @@
+import re
 from pathlib import Path
+
 import boto3
 import fire
-import re
+
 
 def get_scenario_list() -> list:
     """
@@ -20,6 +22,7 @@ def get_scenario_list() -> list:
         scenarios.append(results_file.parent.name)
     return scenarios
 
+
 def get_seed_list() -> list:
     """
     Generate a list of integer seeds from ./scenarios/seeds.txt.
@@ -29,13 +32,15 @@ def get_seed_list() -> list:
         seeds = f.read().splitlines()
     return seeds
 
+
 def sanitize_job_name(job_name: str) -> str:
     """
     Sanitize the job name to match the valid pattern required by AWS Batch.
     """
-    sanitized_name = re.sub(r'[^a-zA-Z0-9_-]', '_', job_name)
+    sanitized_name = re.sub(r"[^a-zA-Z0-9_-]", "_", job_name)
     sanitized_name = sanitized_name[:128]
     return sanitized_name
+
 
 def run(
     n_people: int = 100_000,
@@ -67,8 +72,10 @@ def run(
                 f"Submitting iteration {iteration_name} for scenario {scenario}, Job ID {job['jobId']}"
             )
 
+
 def main():
     fire.Fire(run)
+
 
 if __name__ == "__main__":
     main()
