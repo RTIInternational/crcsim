@@ -163,16 +163,17 @@ class Sex(Enum):
 
 
 class Person:
-    def __init__(self, id, sex, race_ethnicity, params, scheduler, rng, out):
+    def __init__(
+        self, id, sex, race_ethnicity, expected_lifespan, params, scheduler, rng, out
+    ):
         self.id = id
         self.sex = sex
         self.race_ethnicity = race_ethnicity
+        self.expected_lifespan = expected_lifespan
         self.params = params
         self.scheduler = scheduler
         self.rng = rng
         self.out = out
-
-        self.expected_lifespan = None
 
         self.lesions = []
         self.lesion_risk_index = None
@@ -1013,78 +1014,7 @@ class Person:
 
     # on_end_year is just a wrapper for update_value - not necessary as far as I can tell
 
-    def compute_lifespan(self) -> float:
-        """
-        Return a randomly-computed lifespan based on the death rate parameters.
-        """
-
-        rand = self.rng.random()
-        cum_prob_survive = 1.0
-        cum_prob_death = 0.0
-
-        # Find the appropriate death rate table. We don't have separate tables
-        # for all combinations of sex and race_ethnicity, so we'll need to do
-        # some imperfect combining of categories.
-        if self.sex == Sex.FEMALE:
-            if self.race_ethnicity == RaceEthnicity.WHITE_NON_HISPANIC:
-                death_rate = self.params["death_rate_white_female"]
-            elif self.race_ethnicity in (
-                RaceEthnicity.HISPANIC,
-                RaceEthnicity.BLACK_NON_HISPANIC,
-                RaceEthnicity.OTHER_NON_HISPANIC,
-            ):
-                death_rate = self.params["death_rate_black_female"]
-            else:
-                raise ValueError(
-                    f"Unexpected race/ethnicity value: {self.race_ethnicity}"
-                )
-        elif self.sex in (Sex.MALE, Sex.OTHER):
-            if self.race_ethnicity == RaceEthnicity.WHITE_NON_HISPANIC:
-                death_rate = self.params["death_rate_white_male"]
-            elif self.race_ethnicity in (
-                RaceEthnicity.HISPANIC,
-                RaceEthnicity.BLACK_NON_HISPANIC,
-                RaceEthnicity.OTHER_NON_HISPANIC,
-            ):
-                death_rate = self.params["death_rate_black_male"]
-            else:
-                raise ValueError(
-                    f"Unexpected race/ethnicity value: {self.race_ethnicity}"
-                )
-        else:
-            raise ValueError(f"Unexpected sex value: {self.sex}")
-
-        # Move through the death table, searching for the age at which the
-        # person's cumulative probability of death exceeds the random number we
-        # generated. This is the age when the person will die.
-        found_lifespan = False
-
-        for i in range(self.params["max_age"] + 1):
-            cond_prob_death = death_rate(i)
-            prob_death = cond_prob_death * cum_prob_survive
-            cum_prob_death += prob_death
-            cum_prob_survive *= 1 - cond_prob_death
-            if rand < cum_prob_death:
-                # Calculate the lifespan as the current year plus the fraction that
-                # the random number slips into the next year.
-                lifespan = i + 1 - ((cum_prob_death - rand) / prob_death)
-                found_lifespan = True
-                break
-
-        # If we went through the death table without finding a lifespan (this
-        # can happen if the max age is less than the upper bound of the death
-        # table, for example), set the lifespan to the max age.
-        if not found_lifespan:
-            lifespan = self.params["max_age"]
-
-        # Just in case, cap the lifespan at the max age.
-        if lifespan > self.params["max_age"]:
-            lifespan = self.params["max_age"]
-
-        return lifespan
-
     def start_life_timer(self):
-        self.expected_lifespan = self.compute_lifespan()
         self.scheduler.add_event(
             message=PersonDiseaseMessage.OTHER_DEATH,
             handler=self.handle_disease_message,
