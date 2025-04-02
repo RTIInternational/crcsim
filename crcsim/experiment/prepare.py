@@ -2,7 +2,7 @@ import json
 import random
 from enum import Enum, unique
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, TypedDict
+from typing import Callable, Dict, List, Optional, TypedDict, cast
 
 import fire
 
@@ -35,8 +35,8 @@ class ConditionalComplianceParam(Enum):
 class Test(Enum):
     FIT = "FIT"
     # COLONOSCOPY = "Colonoscopy"
-    FDNA = "FDNA"
-    BLOOD = "Blood"
+    # FDNA = "FDNA"
+    # BLOOD = "Blood"
 
 
 def prepare_experiment_dir(
@@ -156,95 +156,208 @@ def transform_routine_ages(test: Test, start_age: int, end_age: int) -> Callable
     return transform
 
 
+def transform_fit_only() -> Callable:
+    """Transform parameters to use FIT tests only."""
+
+    def transform(params):
+        # Set FIT as the only test
+        params["routine_testing_year"] = list(range(45, 76))  # Ages 45-75
+        params["variable_routine_test"] = ["FIT"] * 31  # FIT for all years
+
+        # Disable other tests by setting their routine ages outside valid range
+        for test_name in params["tests"]:
+            if test_name != "FIT":
+                params["tests"][test_name]["routine_start"] = -1
+                params["tests"][test_name]["routine_end"] = -1
+            else:
+                params["tests"]["FIT"]["routine_start"] = 45
+                params["tests"]["FIT"]["routine_end"] = 75
+
+    return transform
+
+
+def transform_use_conditional_compliance(enabled: bool) -> Callable:
+    def transform(params):
+        params["use_conditional_compliance"] = enabled
+
+    return transform
+
+
 def create_scenarios() -> List[Scenario]:
     scenarios = []
 
-    def create_scenarios_per_test(
-        transformers: List[Callable], name_suffix: str
-    ) -> List[Scenario]:
-        """
-        This experiment consists of several blocks of scenarios. Each block consists
-        of the same set of routine tests. The blocks differ in compliance rates and/or
-        screening costs. This function creates a scenario for each test in a block to
-        avoid repeating this code for each block.
-        """
-        scenarios: List[Scenario] = []
-
-        for test in Test:
-            scenario = Scenario(
-                name=test.value + name_suffix, params=get_default_params()
-            ).transform(transform_routine_proportion(test, 1.0))
-            scenarios.append(scenario)
-
-        # In addition to the default params for each test, we also want a few extra
-        # scenarios with variations on the routine frequency.
-        variations: Dict[Test, ScenarioVariation] = {
-            Test.FDNA: {"name": "FDNA_annual", "freq": 1},
-            Test.BLOOD: {"name": "Blood_annual", "freq": 1},
-        }
-
-        for test, variation in variations.items():
-            scenario = (
-                Scenario(
-                    name=variation["name"] + name_suffix,
-                    params=get_default_params(),
-                )
-                .transform(transform_routine_proportion(test, 1.0))
-                .transform(transform_routine_freq(test, variation["freq"]))
-            )
-            scenarios.append(scenario)
-
-        for transformer in transformers:
-            scenarios = [s.transform(transformer) for s in scenarios]
-
-        return scenarios
-
-    # No screening
+    # No screening baseline scenario
     no_screening = (
         Scenario(name="no_screening", params=get_default_params())
+        .transform(transform_fit_only())
         .transform(transform_routine_proportion(Test.FIT, 1.0))
         .transform(transform_routine_ages(Test.FIT, -1, -1))
     )
     scenarios.append(no_screening)
 
-    # Simple random screening compliance scenarios
-    screening_compliance_rates = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    for compliance_rate in screening_compliance_rates:
-        scenarios.extend(
-            create_scenarios_per_test(
-                transformers=[
-                    transform_initial_compliance(compliance_rate),
-                ],
-                name_suffix=f"_screening_compliance_{compliance_rate * 100}",
+    # Full compliance baseline
+    full_compliance = (
+        Scenario(name="full_compliance", params=get_default_params())
+        .transform(transform_fit_only())
+        .transform(transform_routine_proportion(Test.FIT, 1.0))
+        .transform(transform_initial_compliance(1.0))
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.PREV_COMPLIANT, [float(1.0)] * 31
             )
         )
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(1.0)] * 31
+            )
+        )
+    )
+    scenarios.append(full_compliance)
 
-    # Diagnostic compliance scenarios for 50% and 80% screening compliance rates
-    diagnostic_compliance_rates = [0.5, 0.8]
-    for screening_compliance_rate in [0.5, 0.8]:
-        for diagnostic_compliance_rate in diagnostic_compliance_rates:
-            scenarios.extend(
-                create_scenarios_per_test(
-                    transformers=[
-                        transform_initial_compliance(screening_compliance_rate),
-                        transform_diagnostic_compliance(diagnostic_compliance_rate),
-                    ],
-                    name_suffix=f"_{int(screening_compliance_rate * 100)}_screening_and_{int(diagnostic_compliance_rate * 100)}_diagnostic_compliance",
+    # 3a. Fifty percent same agent scenario (same 50% of people always screen)
+    fifty_same = (
+        Scenario(name="fifty_percent_same_agent", params=get_default_params())
+        .transform(transform_fit_only())
+        .transform(transform_routine_proportion(Test.FIT, 1.0))
+        .transform(transform_initial_compliance(0.5))
+        .transform(transform_use_conditional_compliance(True))
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.PREV_COMPLIANT, [float(1.0)] * 31
+            )
+        )
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(0.0)] * 31
+            )
+        )
+    )
+    scenarios.append(fifty_same)
+
+    # 3b. Fifty percent random scenario (pure random, no conditional compliance)
+    fifty_random = (
+        Scenario(name="fifty_percent_random", params=get_default_params())
+        .transform(transform_fit_only())
+        .transform(transform_routine_proportion(Test.FIT, 1.0))
+        .transform(transform_initial_compliance(0.5))
+        .transform(transform_use_conditional_compliance(False))
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.PREV_COMPLIANT, [float(0.5)] * 31
+            )
+        )
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(0.5)] * 31
+            )
+        )
+    )
+    scenarios.append(fifty_random)
+
+    # 4. Delayed compliance scenarios
+    delayed_scenarios = {
+        "delayed_65": {
+            "start_age": 65,
+            "rates": [0.0] * 20 + [1.0] * 11,  # 0% 45-64, 100% 65-75
+        },
+        "delayed_55": {
+            "start_age": 55,
+            "rates": [0.0] * 10 + [1.0] * 21,  # 0% 45-54, 100% 55-75
+        },
+    }
+
+    for name, config in delayed_scenarios.items():
+        rates: List[float] = cast(List[float], config["rates"])  # Cast to List[float]
+        scenario = (
+            Scenario(name=name, params=get_default_params())
+            .transform(transform_fit_only())
+            .transform(transform_routine_proportion(Test.FIT, 1.0))
+            .transform(transform_initial_compliance(0.0))
+            .transform(
+                transform_conditional_compliance_rates(
+                    ConditionalComplianceParam.PREV_COMPLIANT, rates
                 )
             )
-
-    # Diagnostic compliance scenarios for 100% screening compliance rate
-    diagnostic_compliance_rates = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-    for diagnostic_compliance_rate in diagnostic_compliance_rates:
-        scenarios.extend(
-            create_scenarios_per_test(
-                transformers=[
-                    transform_initial_compliance(1.0),
-                    transform_diagnostic_compliance(diagnostic_compliance_rate),
-                ],
-                name_suffix=f"_diagnostic_compliance_{int(diagnostic_compliance_rate * 100)}",
+            .transform(
+                transform_conditional_compliance_rates(
+                    ConditionalComplianceParam.NOT_PREV_COMPLIANT, rates
+                )
             )
         )
+        scenarios.append(scenario)
+
+    # 5. Age-specific compliance scenarios
+    age_specific_high_rates: List[float] = (
+        [0.50] * 10
+        + [0.75] * 10  # 50% for ages 45-54
+        + [0.50] * 11  # 75% for ages 55-64  # 50% for ages 65-75
+    )
+    age_specific_high = (
+        Scenario(name="age_specific_high", params=get_default_params())
+        .transform(transform_fit_only())
+        .transform(transform_routine_proportion(Test.FIT, 1.0))
+        .transform(transform_initial_compliance(0.5))
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.PREV_COMPLIANT, age_specific_high_rates
+            )
+        )
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.NOT_PREV_COMPLIANT, age_specific_high_rates
+            )
+        )
+    )
+    scenarios.append(age_specific_high)
+
+    # Age-specific low compliance scenario
+    age_specific_low_rates: List[float] = (
+        [0.25] * 10
+        + [0.50] * 10  # 25% for ages 45-54
+        + [0.25] * 11  # 50% for ages 55-64
+        + [0.25] * 11  # 25% for ages 65-75
+    )
+    age_specific_low = (
+        Scenario(name="age_specific_low", params=get_default_params())
+        .transform(transform_fit_only())
+        .transform(transform_routine_proportion(Test.FIT, 1.0))
+        .transform(transform_initial_compliance(0.25))
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.PREV_COMPLIANT, age_specific_low_rates
+            )
+        )
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.NOT_PREV_COMPLIANT, age_specific_low_rates
+            )
+        )
+    )
+    scenarios.append(age_specific_low)
+
+    # 6. Random intervals with conditional compliance
+    fixed_rates = {"fifty_percent": 0.5, "twenty_percent": 0.2}
+
+    for name, rate in fixed_rates.items():
+        rates = [rate] * 31  # Same rate for all 31 years (ages 45-75)
+        scenario = (
+            Scenario(name=name, params=get_default_params())
+            .transform(transform_fit_only())
+            .transform(transform_routine_proportion(Test.FIT, 1.0))
+            .transform(transform_initial_compliance(rate))
+            .transform(transform_use_conditional_compliance(True))
+            .transform(
+                transform_conditional_compliance_rates(
+                    ConditionalComplianceParam.PREV_COMPLIANT, rates
+                )
+            )
+            .transform(
+                transform_conditional_compliance_rates(
+                    ConditionalComplianceParam.NOT_PREV_COMPLIANT, rates
+                )
+            )
+        )
+        scenarios.append(scenario)
 
     return scenarios
 
