@@ -6,18 +6,12 @@ seed=$3
 scenario="$4"
 
 output_dir="./output"
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 if [ ! -d "$output_dir" ]; then
   echo "Creating output directory"
   mkdir $output_dir
 fi
 
-# Copy from local scenarios directory instead of S3
-cp "$script_dir/scenarios/$scenario/params.json" "./params.json" || {
-    echo "Error: Failed to copy params.json from $script_dir/scenarios/$scenario/"
-    exit 1
-}
+aws s3 cp "s3://exp-relative-overall-survival-comparison/scenarios/$scenario/params.json" "./params.json" 
 
 crc-simulate \
     --npeople=$npeople \

@@ -87,11 +87,10 @@ def transform_initial_compliance(rate) -> Callable:
 
 
 def create_scenarios() -> List:
-
     scenario_compliance_rates = {
-        "no screening": 0.0,
+        "no_screening": 0.0,
         "fifty_percent": 0.5,
-        "100_percent": 1.0,
+        "hundred_percent": 1.0,
     }
 
     scenarios = []
