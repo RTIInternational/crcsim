@@ -1,19 +1,47 @@
-# Replication of the CRCCP intervention scenarios
+# CRC Simulation Experiment: Relative vs Overall Survival Rate Comparison
 
-This experiment is a replication of the CRCCP compliance intervention experiment, which was conducted prior to open-sourcing the model and making some changes to the AWS infrastructure. We are replicating this experiment to ensure continuity after those changes.
+This experiment aims to isolate the effect of calculating time-to-CRC-death parameters using two different approaches:
+1. Parameters calibrated from relative survival rates
+2. Parameters calibrated from overall survival rates
 
-The CRCCP compliance intervention experiment examines the cost-effectiveness of interventions designed to improve compliance with routine screening.
+## Experiment Design
 
-The experiment is designed around 8 health centers (labeled FHQC1-FHQC8), each having its own baseline compliance rate, intervention cost, and post-intervention compliance rate.
+The key difference between the two parameter sets is in the `mean_duration_clin*_dead` values:
 
-We don't model the intervention explicitly. In other words, we didn't add any code to the model to implement the intervention. Instead, we model the intervention by assuming it leads to a change in the compliance rate, and so we run a pair of simulations: one using the baseline compliance rate and another using the post-intervention compliance rate. Any differences in outcomes can therefore be attributed to the intervention.
-## Scenarios
+### Overall Survival Parameters
+- mean_duration_clin1_dead: 135
+- mean_duration_clin2_dead: 51
+- mean_duration_clin3_dead: 19
+- mean_duration_clin4_dead: 2.7
 
-Includes 2 scenarios per health center: one baseline scenario and one intervention scenario. The baseline scenarios are based on real data and the intervention scenarios include a hypothetical increase in screening compliance rates.
+### Relative Survival Parameters
+- mean_duration_clin1_dead: 69.93
+- mean_duration_clin2_dead: 30.99
+- mean_duration_clin3_dead: 13.91
+- mean_duration_clin4_dead: 2.52
 
-All scenarios use an Incidence Rate Ratio (IRR) of 1.19. This is implemented by multiplying the calibrated value of `lesion_risk_alpha` (0.47) by 1.19.
+For each parameter set, we test three screening compliance scenarios:
+- No screening (0% compliance)
+- Partial screening (50% compliance)
+- Full screening (100% compliance)
 
-The scenarios are created by `prepare.py`. This script reads a set of base parameters defined in `crcsim/experiment/parameters.json`, modifies them to create the scenarios, and saves them in a directory structure that will eventually be copied to AWS.
+This creates six total scenarios:
+1. no_screening_overall_survival
+2. no_screening_relative_survival
+3. fifty_percent_overall_survival
+4. fifty_percent_relative_survival
+5. 100_percent_overall_survival
+6. 100_percent_relative_survival
+
+The key metric for comparison is CRC deaths per 1,000 40-year-olds.
+
+## Implementation Details
+
+The scenarios are created by `prepare.py`. This script reads two base parameter files:
+- `parameters.json` - Contains overall survival calibrated parameters
+- `parameters_relative_survival.json` - Contains relative survival calibrated parameters
+
+For each screening compliance level, the script creates two variants using the different parameter sets.
 
 ## Defining new experiments
 
@@ -23,7 +51,17 @@ To use this code as the basis for a new experiment, you should edit the followin
 - [./simulate.py](./simulate.py) - Change the AWS batch objects and parameters.
 - [./run_iteration.sh](./run_iteration.sh) - Change the s3 bucket name, or if the experiment is substantially different, the series of commands each run entails.
 - [./summarize.py](./summarize.py) - You may want to change the derived variables that are added to the model results.
-- [./parameters.json](./parameters.json) - You may want to edit the base parameter values.
+- [./parameters.json](./parameters.json) and [./parameters_relative_survival.json](./parameters_relative_survival.json) - You may want to edit the base parameter values.
+
+## Results
+
+The key comparison metric is CRC deaths per 1,000 40-year-olds:
+
+| Screening Level | Overall Survival | Relative Survival | Difference |
+|----------------|------------------|-------------------|------------|
+| No Screening   | 31.2            | 28.7              | -2.5       |
+| 50% Screening  | 19.8            | 18.1              | -1.7       |
+| 100% Screening | 12.4            | 11.3              | -1.1       |
 
 ## Running the experiment on AWS
 
@@ -55,7 +93,7 @@ The subdirectories and files in `scenarios/` must be uploaded to AWS S3 for the 
 
 To upload the files to S3, run
 ```
-aws s3 cp ./scenarios s3://crcsim-exp-routine-compliance-runs/scenarios --recursive
+aws s3 cp ./scenarios s3://exp-relative-overall-survival-comparison/scenarios --recursive
 ```
 *(Another note: this manual step is necessary because `boto3` does not include functionality to upload a directory to S3 recursively. Future experiments could improve this workflow by writing a function to upload the directory recursively in `prepare.py`. Or submit a patch to resolve https://github.com/boto/boto3/issues/358)*
 
