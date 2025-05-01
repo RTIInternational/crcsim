@@ -86,6 +86,13 @@ def transform_initial_compliance(rate) -> Callable:
     return transform
 
 
+def transform_lesion_risk_alpha(IRR: float) -> Callable:
+    def transform(params):
+        params["lesion_risk_alpha"] = params["lesion_risk_alpha"] * IRR
+
+    return transform
+
+
 def create_scenarios() -> List:
     scenario_compliance_rates = {
         "no_screening": 0.0,
@@ -93,19 +100,29 @@ def create_scenarios() -> List:
         "hundred_percent": 1.0,
     }
 
+    IRR = 1.19
+
     scenarios = []
 
     for name, rate in scenario_compliance_rates.items():
-        overall_survival = Scenario(
-            name=f"{name}_overall_survival",
-            params=get_default_params("parameters.json"),
-        ).transform(transform_initial_compliance(rate))
+        overall_survival = (
+            Scenario(
+                name=f"{name}_overall_survival",
+                params=get_default_params("parameters.json"),
+            )
+            .transform(transform_initial_compliance(rate))
+            .transform(transform_lesion_risk_alpha(IRR))
+        )
         scenarios.append(overall_survival)
 
-        relative_survival = Scenario(
-            name=f"{name}_relative_survival",
-            params=get_default_params("parameters_relative_survival.json"),
-        ).transform(transform_initial_compliance(rate))
+        relative_survival = (
+            Scenario(
+                name=f"{name}_relative_survival",
+                params=get_default_params("parameters_relative_survival.json"),
+            )
+            .transform(transform_initial_compliance(rate))
+            .transform(transform_lesion_risk_alpha(IRR))
+        )
         scenarios.append(relative_survival)
 
     return scenarios
