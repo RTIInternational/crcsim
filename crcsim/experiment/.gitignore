@@ -1,0 +1,10 @@
+# Generated directories and files
+scenarios/
+output/
+summary/
+*.csv
+*.xlsx
+
+# Python
+__pycache__/
+*.py[cod]
