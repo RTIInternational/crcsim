@@ -94,13 +94,20 @@ def transform_treatment_cost(stage, phase, cost) -> Callable:
     return transform
 
 
+def transform_lesion_risk_alpha(IRR: float) -> Callable:
+    def transform(params):
+        params["lesion_risk_alpha"] = params["lesion_risk_alpha"] * IRR
+
+    return transform
+
+
 def create_scenarios() -> List:
     # For each health center, define the initial compliance rate in the baseline
     # scenario and the implementation scenario.
     initial_compliance = {
         "fqhc1": (0.522, 0.593),
         "fqhc2": (0.154, 0.421),
-        "fqhc3": (0.519, 0.615),
+        "fqhc3": (0.519, 0.568),
         "fqhc4": (0.278, 0.374),
         "fqhc5": (0.383, 0.572),
         "fqhc6": (0.211, 0.392),
@@ -119,14 +126,19 @@ def create_scenarios() -> List:
     scenarios = []
 
     for fqhc, rates in initial_compliance.items():
-        baseline = Scenario(
-            name=f"{fqhc}_baseline", params=get_default_params()
-        ).transform(transform_initial_compliance(rates[0]))
+        IRR = 1.19
+        baseline = (
+            Scenario(name=f"{fqhc}_baseline", params=get_default_params())
+            .transform(transform_initial_compliance(rates[0]))
+            .transform(transform_lesion_risk_alpha(IRR))
+        )
         scenarios.append(baseline)
 
-        implementation = Scenario(
-            name=f"{fqhc}_implementation", params=get_default_params()
-        ).transform(transform_initial_compliance(rates[1]))
+        implementation = (
+            Scenario(name=f"{fqhc}_implementation", params=get_default_params())
+            .transform(transform_initial_compliance(rates[1]))
+            .transform(transform_lesion_risk_alpha(IRR))
+        )
         scenarios.append(implementation)
 
         """# Sensitivity Analysis 1.  Lower repeat compliance rate
@@ -135,7 +147,8 @@ def create_scenarios() -> List:
         baseline_lower_repeat_compliance = deepcopy(baseline)
         baseline_lower_repeat_compliance.transform(
             transform_repeat_compliance(lower_repeat_compliance, test_name)
-        )
+        ).transform(transform_lesion_risk_alpha(IRR))
+
         baseline_lower_repeat_compliance.name = (
             f"{fqhc}_baseline_lower_repeat_compliance"
         )
@@ -144,7 +157,8 @@ def create_scenarios() -> List:
         implementation_lower_repeat_compliance = deepcopy(implementation)
         implementation_lower_repeat_compliance.transform(
             transform_repeat_compliance(lower_repeat_compliance, test_name)
-        )
+        ).transform(transform_lesion_risk_alpha(IRR))
+
         implementation_lower_repeat_compliance.name = (
             f"{fqhc}_implementation_lower_repeat_compliance"
         )
@@ -156,6 +170,8 @@ def create_scenarios() -> List:
             transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
         ).transform(
             transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
+        ).transform(
+            transform_lesion_risk_alpha(IRR)
         )
         baseline_low_cost.name = f"{fqhc}_baseline_low_initial_treat_cost"
         scenarios.append(baseline_low_cost)
@@ -165,6 +181,8 @@ def create_scenarios() -> List:
             transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
         ).transform(
             transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
+        ).transform(
+            transform_lesion_risk_alpha(IRR)
         )
         implementation_low_cost.name = f"{fqhc}_implementation_low_initial_treat_cost"
         scenarios.append(implementation_low_cost)
@@ -179,6 +197,8 @@ def create_scenarios() -> List:
             transform_treatment_cost(
                 "4", "initial", extra_low_initial_stage_4_treatment_cost
             )
+        ).transform(
+            transform_lesion_risk_alpha(IRR)
         )
         baseline_extra_low_cost.name = f"{fqhc}_baseline_extra_low_initial_treat_cost"
         scenarios.append(baseline_extra_low_cost)
@@ -192,6 +212,8 @@ def create_scenarios() -> List:
             transform_treatment_cost(
                 "4", "initial", extra_low_initial_stage_4_treatment_cost
             )
+        ).transform(
+            transform_lesion_risk_alpha(IRR)
         )
         implementation_extra_low_cost.name = (
             f"{fqhc}_implementation_extra_low_initial_treat_cost"
@@ -202,14 +224,15 @@ def create_scenarios() -> List:
         baseline_lower_compliance = deepcopy(baseline)
         baseline_lower_compliance.transform(
             transform_diagnostic_compliance(low_diagnostic_compliance_rate)
-        )
+        ).transform(transform_lesion_risk_alpha(IRR))
         baseline_lower_compliance.name = f"{fqhc}_baseline_lower_diagnostic_compliance"
         scenarios.append(baseline_lower_compliance)
 
         implementation_lower_compliance = deepcopy(implementation)
         implementation_lower_compliance.transform(
             transform_diagnostic_compliance(low_diagnostic_compliance_rate)
-        )
+        ).transform(transform_lesion_risk_alpha(IRR))
+
         implementation_lower_compliance.name = (
             f"{fqhc}_implementation_lower_diagnostic_compliance"
         )
@@ -226,6 +249,8 @@ def create_scenarios() -> List:
             )
         ).transform(
             transform_surveillance_end_age(low_surveillance_end_age)
+        ).transform(
+            transform_lesion_risk_alpha(IRR)
         )
         baseline_lower_surveillance.name = f"{fqhc}_baseline_lower_surveillance"
         scenarios.append(baseline_lower_surveillance)
@@ -239,6 +264,8 @@ def create_scenarios() -> List:
             )
         ).transform(
             transform_surveillance_end_age(low_surveillance_end_age)
+        ).transform(
+            transform_lesion_risk_alpha(IRR)
         )
         implementation_lower_surveillance.name = (
             f"{fqhc}_implementation_lower_surveillance"
