@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, TypedDict
 
 import fire
+from combine_tests import combine_tests_in_params
 
 SEED: int = 49865106
 NUM_ITERATIONS: int = 100
@@ -157,6 +158,24 @@ def transform_routine_ages(test: Test, start_age: int, end_age: int) -> Callable
     return transform
 
 
+def transform_combine_tests(test1: Test, test2: Test, how: str) -> Callable:
+    def transform(params):
+        combine_tests_in_params(params, test1.value, test2.value, how)
+
+        # Double-check that only the combined test is in routine_tests
+        combined_test_name = f"{test1.value}_{test2.value}_{how}"
+        params["routine_tests"] = [combined_test_name]
+
+        # Double-check that only the combined test has proportion > 0
+        for test_name in params["tests"]:
+            if test_name == combined_test_name:
+                params["tests"][test_name]["proportion"] = 1.0
+            else:
+                params["tests"][test_name]["proportion"] = 0.0
+
+    return transform
+
+
 def create_scenarios() -> List[Scenario]:
     scenarios = []
 
@@ -217,7 +236,7 @@ def create_scenarios() -> List[Scenario]:
         )
     )
 
-    #  repeat for 80, 50, and 30% compliance
+    """#  repeat for 80, 50, and 30% compliance
     scenarios.extend(
         create_scenarios_per_test(
             transformers=[
@@ -295,7 +314,42 @@ def create_scenarios() -> List[Scenario]:
             ],
             name_suffix="_100_screening_and_high_screening_cost",
         )
-    )
+    )"""
+
+    # Add combined test scenarios
+    combined_test_scenarios = []
+
+    # Define combinations to test
+    test_combinations = [
+        (Test.FIT, Test.BLOOD, "serial"),
+        (Test.FIT, Test.BLOOD, "parallel"),
+    ]
+
+    for test1, test2, how in test_combinations:
+        suffix = f"_{test1.value}_{test2.value}_{how}"
+
+        # Create scenario with 100% compliance
+        scenario = (
+            Scenario(
+                name=f"combined{suffix}_100_compliance", params=get_default_params()
+            )
+            .transform(transform_combine_tests(test1, test2, how))
+            .transform(transform_initial_compliance(1.0))
+        )
+        combined_test_scenarios.append(scenario)
+
+        # Create scenario with 80% compliance
+        scenario = (
+            Scenario(
+                name=f"combined{suffix}_80_compliance", params=get_default_params()
+            )
+            .transform(transform_combine_tests(test1, test2, how))
+            .transform(transform_initial_compliance(0.8))
+        )
+        combined_test_scenarios.append(scenario)
+
+    scenarios.extend(combined_test_scenarios)
+
     return scenarios
 
 
