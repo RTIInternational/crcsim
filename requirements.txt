@@ -42,7 +42,7 @@ mypy-extensions==1.0.0
     #   mypy
 nodeenv==1.4.0
     # via pre-commit
-numpy==1.26.0
+numpy==1.26.3
     # via pandas
 packaging==23.2
     # via
@@ -85,7 +85,7 @@ toml==0.10.1
     # via pre-commit
 typing-extensions==4.1.1
     # via mypy
-tzdata==2023.3
+tzdata==2023.4
     # via pandas
 virtualenv==20.0.28
     # via pre-commit

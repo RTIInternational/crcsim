@@ -423,11 +423,24 @@ class Analysis:
 
         # Number of times each test was adopted for routine screening
         routine_tests_chosen = self.raw_output[
-            self.raw_output.record_type.eq("test_chosen")
+            self.raw_output.record_type.eq("test_chosen") & self.raw_output.time.eq(0)
         ]
         for rt in self.params["routine_tests"]:
             rt_chosen = routine_tests_chosen[routine_tests_chosen.test_name.eq(rt)]
             replication_output_row[f"{rt}_adopted"] = len(rt_chosen.index)
+
+        # Number of years each routine test was used
+        # (if test variable routine test was enabled in the simulation)
+        if self.params["use_variable_routine_test"]:
+            rt_years = self.raw_output[
+                self.raw_output.record_type.eq("test_chosen")
+                & self.raw_output.time.gt(0)
+            ]
+            rt_years_grouped = rt_years.groupby(["test_name"]).agg(
+                count=("time", "count")
+            )
+            for ix, row in rt_years_grouped.iterrows():
+                replication_output_row[f"{ix}_available_as_routine"] = row["count"]
 
         # Number of times each test was performed for routine screening
         # and number of times per thousand unscreened and undiagnosed 40-year-olds
