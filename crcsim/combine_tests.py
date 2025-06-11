@@ -103,7 +103,6 @@ def combine_tests_in_params(
 
     # By default, we'll assign everyone the combined test
     params["tests"][new_test_name]["proportion"] = 1.0
-   
 
     return params
 
