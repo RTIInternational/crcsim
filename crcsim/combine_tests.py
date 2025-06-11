@@ -94,13 +94,16 @@ def combine_tests_in_params(
     if new_test_name not in params["routine_tests"]:
         params["routine_tests"].append(new_test_name)
 
+    # Set proportion of all other tests to 0.0
+    for test_name in params["tests"]:
+        params["tests"][test_name]["proportion"] = 0.0
+
     # Now add the combined test to the tests dictionary
     params["tests"][new_test_name] = combined
 
-    # Set proportion of all other tests to 0.0
-    for test_name in params["tests"]:
-        if test_name != new_test_name:
-            params["tests"][test_name]["proportion"] = 0.0
+    # By default, we'll assign everyone the combined test
+    params["tests"][new_test_name]["proportion"] = 1.0
+   
 
     return params
 
