@@ -8,7 +8,7 @@ def test_step_mismatch():
     Passing lists whose lengths don't match should raise an exception.
     """
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Lengths of x and y don't match"):
         StepFunction(x=[1, 2, 3], y=[10, 20])
 
 
@@ -17,7 +17,7 @@ def test_step_unsorted():
     Passing x values that aren't sorted should raise an exception.
     """
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="x isn't sorted in increasing order"):
         StepFunction(x=[1, 3, 2], y=[10, 30, 20])
 
 
@@ -27,7 +27,7 @@ def test_step_reverse_sorted():
     exception.
     """
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="x isn't sorted in increasing order"):
         StepFunction(x=[3, 2, 1], y=[30, 20, 10])
 
 
@@ -62,7 +62,9 @@ def test_step_extrapolate_low():
     """
 
     f = StepFunction(x=[1, 2, 3], y=[10, 20, 30])
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match="is smaller than the smallest defined x value"
+    ):
         f(0)
 
 
