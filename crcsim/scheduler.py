@@ -40,7 +40,7 @@ class Scheduler:
             # debugging is enabled. Constructing the string argument takes a
             # surprisingly large portion of the overall script runtime.
             logging.debug(
-                f"[scheduler] add event '{str(event.message)}' to queue at time {self.time} for firing at time {new_event.time}"
+                f"[scheduler] add event '{event.message!s}' to queue at time {self.time} for firing at time {new_event.time}"
             )
 
         return new_event
@@ -53,15 +53,16 @@ class Scheduler:
 
         if self.is_empty():
             raise IndexError("queue is empty")
-        else:
-            event = self.queue.pop(0)
-            self.time = event.time
-            return event
+        event = self.queue.pop(0)
+        self.time = event.time
+        return event
 
     def is_empty(self):
         return len(self.queue) == 0
 
-    def remove_events(self, messages: list = []):
+    def remove_events(self, messages: list | None = None):
+        if messages is None:
+            messages = []
         self.queue = [event for event in self.queue if event.message not in messages]
         logging.debug(
             f"[scheduler] clearing events with messages {[str(m) for m in messages]} at time {self.time}"

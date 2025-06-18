@@ -614,11 +614,10 @@ class Person:
             elif message == PersonTestingMessage.NOT_COMPLIANT:
                 self.testing_state = PersonTestingState.ROUTINE
                 self.routine_is_diagnostic = False
-            elif message == PersonTestingMessage.POSITIVE_POLYP:
-                self.testing_state = PersonTestingState.SURVEILLANCE
-                self.num_surveillance_tests_since_positive = 0
-                self.routine_is_diagnostic = False
-            elif message == PersonTestingMessage.POSITIVE_CANCER:
+            elif (
+                message == PersonTestingMessage.POSITIVE_POLYP
+                or message == PersonTestingMessage.POSITIVE_CANCER
+            ):
                 self.testing_state = PersonTestingState.SURVEILLANCE
                 self.num_surveillance_tests_since_positive = 0
                 self.routine_is_diagnostic = False
@@ -734,17 +733,17 @@ class Person:
         # Appendix A. The notation is mapped from the paper to this code as
         # follows:
         #
-        #   R_i = self.lesion_risk_index
-        #   a = next_onset_time
-        #   a_0 = self.previous_lesion_onset_time
+        #   R_i = self.lesion_risk_index # noqa: ERA001
+        #   a = next_onset_time # noqa: ERA001
+        #   a_0 = self.previous_lesion_onset_time # noqa: ERA001
         #   h_i(a) = incidence(a)
         #   integral(h_i(x), x = a_0 to a) = target_area
-        #   u = u
+        #   u = u # noqa: ERA001
         #
         # The goal of this function is to find the value of a that satisfies the
         # equation:
         #
-        #   u = 1 - exp[-H_i(a,a_0)]
+        #   u = 1 - exp[-H_i(a,a_0)] # noqa: ERA001
         #
         # where
         #
@@ -810,10 +809,9 @@ class Person:
 
                 if next_onset_time <= self.expected_lifespan:
                     return next_onset_time - self.scheduler.time
-                else:
-                    # The next lesion won't appear until after the person is
-                    # dead, so there won't be a next lesion.
-                    return None
+                # The next lesion won't appear until after the person is
+                # dead, so there won't be a next lesion.
+                return None
 
             # We haven't reached the target area yet, so prepare for the next
             # box.
@@ -939,9 +937,9 @@ class Person:
             and not self.routine_is_diagnostic
         ):
             return self.rng.random() < self.params["diagnostic_compliance_rate"]
-        elif self.testing_state == PersonTestingState.SURVEILLANCE:
+        if self.testing_state == PersonTestingState.SURVEILLANCE:
             return self.rng.random() < self.params["surveillance_compliance_rate"]
-        elif self.testing_state == PersonTestingState.ROUTINE or (
+        if self.testing_state == PersonTestingState.ROUTINE or (
             self.testing_state == PersonTestingState.DIAGNOSTIC
             and self.routine_is_diagnostic
         ):
@@ -999,18 +997,15 @@ class Person:
             if self.rng.random() < compliance_prob:
                 self.routine_compliance_history.append(True)
                 return True
-            else:
-                self.routine_compliance_history.append(False)
-                return False
-        else:
-            raise ValueError(f"Unexpected testing state {self.testing_state}")
+            self.routine_compliance_history.append(False)
+            return False
+        raise ValueError(f"Unexpected testing state {self.testing_state}")
 
     def is_false_positive(self, test: str):
         if test is None:
             return False
-        else:
-            fp = self.rng.random() < 1 - self.params["tests"][test]["specificity"]
-            return fp
+        fp = self.rng.random() < 1 - self.params["tests"][test]["specificity"]
+        return fp
 
     # on_end_year is just a wrapper for update_value - not necessary as far as I can tell
 
@@ -1193,15 +1188,15 @@ class Person:
 
                 # Store number of polyps found by size. These counts influence how
                 # soon the person needs to be retested.
-                self.previous_test_small[
-                    self.diagnostic_test
-                ] = num_detected_polyps_small
-                self.previous_test_medium[
-                    self.diagnostic_test
-                ] = num_detected_polyps_medium
-                self.previous_test_large[
-                    self.diagnostic_test
-                ] = num_detected_polyps_large
+                self.previous_test_small[self.diagnostic_test] = (
+                    num_detected_polyps_small
+                )
+                self.previous_test_medium[self.diagnostic_test] = (
+                    num_detected_polyps_medium
+                )
+                self.previous_test_large[self.diagnostic_test] = (
+                    num_detected_polyps_large
+                )
 
                 # check whether test resulted in perforation
                 if self.rng.random() < test_params["proportion_perforation"]:
@@ -1467,15 +1462,15 @@ class Person:
 
                 # Store number of polyps found by size. These counts influence how
                 # soon the person needs to be retested.
-                self.previous_test_small[
-                    self.surveillance_test
-                ] = num_detected_polyps_small
-                self.previous_test_medium[
-                    self.surveillance_test
-                ] = num_detected_polyps_medium
-                self.previous_test_large[
-                    self.surveillance_test
-                ] = num_detected_polyps_large
+                self.previous_test_small[self.surveillance_test] = (
+                    num_detected_polyps_small
+                )
+                self.previous_test_medium[self.surveillance_test] = (
+                    num_detected_polyps_medium
+                )
+                self.previous_test_large[self.surveillance_test] = (
+                    num_detected_polyps_large
+                )
 
                 # check whether test resulted in perforation
                 if self.rng.random() < test_params["proportion_perforation"]:
@@ -1524,7 +1519,11 @@ class Person:
             )
 
     def handle_yearly_actions(self, message="Conduct yearly actions"):
-        if self.params["use_variable_routine_test"]:
+        if (
+            self.params["use_variable_routine_test"]
+            and self.scheduler.time >= self.params["routine_testing_year"][0]
+            and self.scheduler.time <= self.params["routine_testing_year"][-1]
+        ):
             # If the simulation is using variable routine tests, then the parameters
             # specify a single routine test that every person in the simulation will
             # use for each testing year. This allows a person to switch tests during
@@ -1534,18 +1533,14 @@ class Person:
             # Indices 0 and -1 of self.params["routine_testing_year"] safely return
             # the min and max testing years, because crcsim.parameters raises an
             # error if this parameter is not sorted in increasing order.
-            if (
-                self.scheduler.time >= self.params["routine_testing_year"][0]
-                and self.scheduler.time <= self.params["routine_testing_year"][-1]
-            ):
-                self.routine_test = self.params["variable_routine_test"](
-                    self.scheduler.time
-                )
-                self.out.add_routine_test_chosen(
-                    person_id=self.id,
-                    test_name=self.routine_test,
-                    time=self.scheduler.time,
-                )
+            self.routine_test = self.params["variable_routine_test"](
+                self.scheduler.time
+            )
+            self.out.add_routine_test_chosen(
+                person_id=self.id,
+                test_name=self.routine_test,
+                time=self.scheduler.time,
+            )
 
         self.do_tests()
 
@@ -1575,13 +1570,14 @@ class Person:
             # be if they had a colonoscopy in the past 9 years.
             found_skip = False
             for test, age in self.previous_test_age.items():
-                if test in self.params["routine_tests"]:
-                    if age is not None:
-                        if (int(self.scheduler.time) - age) < self.params["tests"][
-                            test
-                        ]["routine_freq"]:
-                            found_skip = True
-                            break
+                if (
+                    test in self.params["routine_tests"]
+                    and age is not None
+                    and (int(self.scheduler.time) - age)
+                    < self.params["tests"][test]["routine_freq"]
+                ):
+                    found_skip = True
+                    break
             if not found_skip:
                 self.test_routine()
 
@@ -1623,7 +1619,7 @@ class Person:
                     raise ValueError(
                         "Did not expect age at previous diagnostic test to be null"
                     )
-                elif (
+                if (
                     self.surveillance_test not in self.previous_test_age
                     or self.previous_test_age[self.surveillance_test]
                     < self.previous_test_age[self.diagnostic_test]
@@ -2213,9 +2209,7 @@ class Lesion:
                 )
             else:
                 pass
-        elif self.state == LesionState.REMOVED:
-            pass
-        elif self.state == LesionState.DEAD:
+        elif self.state == LesionState.REMOVED or self.state == LesionState.DEAD:
             pass
         else:
             raise ValueError(f"Unexpected Lesion state {self.state}")
