@@ -163,16 +163,17 @@ class Sex(Enum):
 
 
 class Person:
-    def __init__(self, id, sex, race_ethnicity, params, scheduler, rng, out):
+    def __init__(
+        self, id, sex, race_ethnicity, expected_lifespan, params, scheduler, rng, out
+    ):
         self.id = id
         self.sex = sex
         self.race_ethnicity = race_ethnicity
+        self.expected_lifespan = expected_lifespan
         self.params = params
         self.scheduler = scheduler
         self.rng = rng
         self.out = out
-
-        self.expected_lifespan = None
 
         self.lesions = []
         self.lesion_risk_index = None
@@ -591,7 +592,7 @@ class Person:
         elif self.testing_state == PersonTestingState.ROUTINE:
             if message == PersonTestingMessage.SYMPTOMATIC:
                 self.testing_state = PersonTestingState.DIAGNOSTIC
-                self.test_diagnostic()
+                self.test_diagnostic(symptomatic=True)
             elif message == PersonTestingMessage.SCREEN_POSITIVE:
                 self.testing_state = PersonTestingState.DIAGNOSTIC
                 self.test_diagnostic()
@@ -613,11 +614,10 @@ class Person:
             elif message == PersonTestingMessage.NOT_COMPLIANT:
                 self.testing_state = PersonTestingState.ROUTINE
                 self.routine_is_diagnostic = False
-            elif message == PersonTestingMessage.POSITIVE_POLYP:
-                self.testing_state = PersonTestingState.SURVEILLANCE
-                self.num_surveillance_tests_since_positive = 0
-                self.routine_is_diagnostic = False
-            elif message == PersonTestingMessage.POSITIVE_CANCER:
+            elif (
+                message == PersonTestingMessage.POSITIVE_POLYP
+                or message == PersonTestingMessage.POSITIVE_CANCER
+            ):
                 self.testing_state = PersonTestingState.SURVEILLANCE
                 self.num_surveillance_tests_since_positive = 0
                 self.routine_is_diagnostic = False
@@ -630,7 +630,7 @@ class Person:
                 self.testing_transition_timeout_event.enabled = False
 
                 self.testing_state = PersonTestingState.DIAGNOSTIC
-                self.test_diagnostic()
+                self.test_diagnostic(symptomatic=True)
             elif message == PersonTestingMessage.RETURN_TO_ROUTINE:
                 # When exiting a state with a timeout transition, always disable the
                 # timeout event to avoid acting on stale messages.
@@ -642,7 +642,7 @@ class Person:
         elif self.testing_state == PersonTestingState.SURVEILLANCE:
             if message == PersonTestingMessage.SYMPTOMATIC:
                 self.testing_state = PersonTestingState.SURVEILLANCE
-                self.test_surveillance()
+                self.test_surveillance(symptomatic=True)
             elif message == PersonTestingMessage.POSITIVE_POLYP:
                 self.testing_state = PersonTestingState.SURVEILLANCE
                 self.num_surveillance_tests_since_positive = 0
@@ -733,17 +733,17 @@ class Person:
         # Appendix A. The notation is mapped from the paper to this code as
         # follows:
         #
-        #   R_i = self.lesion_risk_index
-        #   a = next_onset_time
-        #   a_0 = self.previous_lesion_onset_time
+        #   R_i = self.lesion_risk_index # noqa: ERA001
+        #   a = next_onset_time # noqa: ERA001
+        #   a_0 = self.previous_lesion_onset_time # noqa: ERA001
         #   h_i(a) = incidence(a)
         #   integral(h_i(x), x = a_0 to a) = target_area
-        #   u = u
+        #   u = u # noqa: ERA001
         #
         # The goal of this function is to find the value of a that satisfies the
         # equation:
         #
-        #   u = 1 - exp[-H_i(a,a_0)]
+        #   u = 1 - exp[-H_i(a,a_0)] # noqa: ERA001
         #
         # where
         #
@@ -809,10 +809,9 @@ class Person:
 
                 if next_onset_time <= self.expected_lifespan:
                     return next_onset_time - self.scheduler.time
-                else:
-                    # The next lesion won't appear until after the person is
-                    # dead, so there won't be a next lesion.
-                    return None
+                # The next lesion won't appear until after the person is
+                # dead, so there won't be a next lesion.
+                return None
 
             # We haven't reached the target area yet, so prepare for the next
             # box.
@@ -872,6 +871,23 @@ class Person:
         self.diagnostic_test = self.params["diagnostic_test"]
         self.surveillance_test = self.params["surveillance_test"]
 
+        if self.params["use_variable_routine_test"]:
+            # If the simulation is using variable routine tests, then we do not pick
+            # a single routine test for each person. Instead, we will refer to the
+            # routine_testing_year and routine_test_by_year parameters to determine
+            # which test to use each year. This allows a person to switch tests during
+            # their lifetime. We still assign the routine_test attribute here to
+            # avoid errors from yearly actions that expect a person to have a routine
+            # test attribute.
+            starting_test = self.params["routine_test_by_year"][0]
+            self.routine_test = starting_test
+            self.out.add_routine_test_chosen(
+                person_id=self.id,
+                test_name=starting_test,
+                time=self.scheduler.time,
+            )
+            return
+
         # Choose the routine test based on proportions specified in
         # parameters file.
         #
@@ -903,6 +919,7 @@ class Person:
                 self.out.add_routine_test_chosen(
                     person_id=self.id,
                     test_name=test,
+                    time=self.scheduler.time,
                 )
                 break
 
@@ -920,9 +937,9 @@ class Person:
             and not self.routine_is_diagnostic
         ):
             return self.rng.random() < self.params["diagnostic_compliance_rate"]
-        elif self.testing_state == PersonTestingState.SURVEILLANCE:
+        if self.testing_state == PersonTestingState.SURVEILLANCE:
             return self.rng.random() < self.params["surveillance_compliance_rate"]
-        elif self.testing_state == PersonTestingState.ROUTINE or (
+        if self.testing_state == PersonTestingState.ROUTINE or (
             self.testing_state == PersonTestingState.DIAGNOSTIC
             and self.routine_is_diagnostic
         ):
@@ -980,93 +997,19 @@ class Person:
             if self.rng.random() < compliance_prob:
                 self.routine_compliance_history.append(True)
                 return True
-            else:
-                self.routine_compliance_history.append(False)
-                return False
-        else:
-            raise ValueError(f"Unexpected testing state {self.testing_state}")
+            self.routine_compliance_history.append(False)
+            return False
+        raise ValueError(f"Unexpected testing state {self.testing_state}")
 
     def is_false_positive(self, test: str):
         if test is None:
             return False
-        else:
-            fp = self.rng.random() < 1 - self.params["tests"][test]["specificity"]
-            return fp
+        fp = self.rng.random() < 1 - self.params["tests"][test]["specificity"]
+        return fp
 
     # on_end_year is just a wrapper for update_value - not necessary as far as I can tell
 
-    def compute_lifespan(self) -> float:
-        """
-        Return a randomly-computed lifespan based on the death rate parameters.
-        """
-
-        rand = self.rng.random()
-        cum_prob_survive = 1.0
-        cum_prob_death = 0.0
-
-        # Find the appropriate death rate table. We don't have separate tables
-        # for all combinations of sex and race_ethnicity, so we'll need to do
-        # some imperfect combining of categories.
-        if self.sex == Sex.FEMALE:
-            if self.race_ethnicity == RaceEthnicity.WHITE_NON_HISPANIC:
-                death_rate = self.params["death_rate_white_female"]
-            elif self.race_ethnicity in (
-                RaceEthnicity.HISPANIC,
-                RaceEthnicity.BLACK_NON_HISPANIC,
-                RaceEthnicity.OTHER_NON_HISPANIC,
-            ):
-                death_rate = self.params["death_rate_black_female"]
-            else:
-                raise ValueError(
-                    f"Unexpected race/ethnicity value: {self.race_ethnicity}"
-                )
-        elif self.sex in (Sex.MALE, Sex.OTHER):
-            if self.race_ethnicity == RaceEthnicity.WHITE_NON_HISPANIC:
-                death_rate = self.params["death_rate_white_male"]
-            elif self.race_ethnicity in (
-                RaceEthnicity.HISPANIC,
-                RaceEthnicity.BLACK_NON_HISPANIC,
-                RaceEthnicity.OTHER_NON_HISPANIC,
-            ):
-                death_rate = self.params["death_rate_black_male"]
-            else:
-                raise ValueError(
-                    f"Unexpected race/ethnicity value: {self.race_ethnicity}"
-                )
-        else:
-            raise ValueError(f"Unexpected sex value: {self.sex}")
-
-        # Move through the death table, searching for the age at which the
-        # person's cumulative probability of death exceeds the random number we
-        # generated. This is the age when the person will die.
-        found_lifespan = False
-
-        for i in range(self.params["max_age"] + 1):
-            cond_prob_death = death_rate(i)
-            prob_death = cond_prob_death * cum_prob_survive
-            cum_prob_death += prob_death
-            cum_prob_survive *= 1 - cond_prob_death
-            if rand < cum_prob_death:
-                # Calculate the lifespan as the current year plus the fraction that
-                # the random number slips into the next year.
-                lifespan = i + 1 - ((cum_prob_death - rand) / prob_death)
-                found_lifespan = True
-                break
-
-        # If we went through the death table without finding a lifespan (this
-        # can happen if the max age is less than the upper bound of the death
-        # table, for example), set the lifespan to the max age.
-        if not found_lifespan:
-            lifespan = self.params["max_age"]
-
-        # Just in case, cap the lifespan at the max age.
-        if lifespan > self.params["max_age"]:
-            lifespan = self.params["max_age"]
-
-        return lifespan
-
     def start_life_timer(self):
-        self.expected_lifespan = self.compute_lifespan()
         self.scheduler.add_event(
             message=PersonDiseaseMessage.OTHER_DEATH,
             handler=self.handle_disease_message,
@@ -1077,7 +1020,7 @@ class Person:
             time=self.expected_lifespan,
         )
 
-    def test_diagnostic(self):
+    def test_diagnostic(self, symptomatic: bool = False):
         if (
             self.testing_state == PersonTestingState.DIAGNOSTIC
             and self.disease_state
@@ -1094,7 +1037,7 @@ class Person:
                 if self.routine_is_diagnostic
                 else TestingRole.DIAGNOSTIC
             )
-            if self.is_compliant(test=self.diagnostic_test):
+            if self.is_compliant(test=self.diagnostic_test) or symptomatic is True:
                 test_params = self.params["tests"][self.diagnostic_test]
 
                 self.out.add_test_performed(
@@ -1245,15 +1188,15 @@ class Person:
 
                 # Store number of polyps found by size. These counts influence how
                 # soon the person needs to be retested.
-                self.previous_test_small[
-                    self.diagnostic_test
-                ] = num_detected_polyps_small
-                self.previous_test_medium[
-                    self.diagnostic_test
-                ] = num_detected_polyps_medium
-                self.previous_test_large[
-                    self.diagnostic_test
-                ] = num_detected_polyps_large
+                self.previous_test_small[self.diagnostic_test] = (
+                    num_detected_polyps_small
+                )
+                self.previous_test_medium[self.diagnostic_test] = (
+                    num_detected_polyps_medium
+                )
+                self.previous_test_large[self.diagnostic_test] = (
+                    num_detected_polyps_large
+                )
 
                 # check whether test resulted in perforation
                 if self.rng.random() < test_params["proportion_perforation"]:
@@ -1352,12 +1295,12 @@ class Person:
                         time=self.scheduler.time,
                     )
 
-    def test_surveillance(self):
+    def test_surveillance(self, symptomatic: bool = False):
         if (
             self.testing_state == PersonTestingState.SURVEILLANCE
             and self.disease_state != PersonDiseaseState.DEAD
         ):
-            if self.is_compliant(test=self.surveillance_test):
+            if self.is_compliant(test=self.surveillance_test) or symptomatic is True:
                 test_params = self.params["tests"][self.surveillance_test]
 
                 self.out.add_test_performed(
@@ -1519,15 +1462,15 @@ class Person:
 
                 # Store number of polyps found by size. These counts influence how
                 # soon the person needs to be retested.
-                self.previous_test_small[
-                    self.surveillance_test
-                ] = num_detected_polyps_small
-                self.previous_test_medium[
-                    self.surveillance_test
-                ] = num_detected_polyps_medium
-                self.previous_test_large[
-                    self.surveillance_test
-                ] = num_detected_polyps_large
+                self.previous_test_small[self.surveillance_test] = (
+                    num_detected_polyps_small
+                )
+                self.previous_test_medium[self.surveillance_test] = (
+                    num_detected_polyps_medium
+                )
+                self.previous_test_large[self.surveillance_test] = (
+                    num_detected_polyps_large
+                )
 
                 # check whether test resulted in perforation
                 if self.rng.random() < test_params["proportion_perforation"]:
@@ -1576,6 +1519,29 @@ class Person:
             )
 
     def handle_yearly_actions(self, message="Conduct yearly actions"):
+        if (
+            self.params["use_variable_routine_test"]
+            and self.scheduler.time >= self.params["routine_testing_year"][0]
+            and self.scheduler.time <= self.params["routine_testing_year"][-1]
+        ):
+            # If the simulation is using variable routine tests, then the parameters
+            # specify a single routine test that every person in the simulation will
+            # use for each testing year. This allows a person to switch tests during
+            # their lifetime. In this case, we assign the routine test for each year
+            # rather than choosing a single routine test at initiatilization.
+            #
+            # Indices 0 and -1 of self.params["routine_testing_year"] safely return
+            # the min and max testing years, because crcsim.parameters raises an
+            # error if this parameter is not sorted in increasing order.
+            self.routine_test = self.params["variable_routine_test"](
+                self.scheduler.time
+            )
+            self.out.add_routine_test_chosen(
+                person_id=self.id,
+                test_name=self.routine_test,
+                time=self.scheduler.time,
+            )
+
         self.do_tests()
 
         self.scheduler.add_event(
@@ -1604,13 +1570,14 @@ class Person:
             # be if they had a colonoscopy in the past 9 years.
             found_skip = False
             for test, age in self.previous_test_age.items():
-                if test in self.params["routine_tests"]:
-                    if age is not None:
-                        if (int(self.scheduler.time) - age) < self.params["tests"][
-                            test
-                        ]["routine_freq"]:
-                            found_skip = True
-                            break
+                if (
+                    test in self.params["routine_tests"]
+                    and age is not None
+                    and (int(self.scheduler.time) - age)
+                    < self.params["tests"][test]["routine_freq"]
+                ):
+                    found_skip = True
+                    break
             if not found_skip:
                 self.test_routine()
 
@@ -1652,7 +1619,7 @@ class Person:
                     raise ValueError(
                         "Did not expect age at previous diagnostic test to be null"
                     )
-                elif (
+                if (
                     self.surveillance_test not in self.previous_test_age
                     or self.previous_test_age[self.surveillance_test]
                     < self.previous_test_age[self.diagnostic_test]
@@ -2242,9 +2209,7 @@ class Lesion:
                 )
             else:
                 pass
-        elif self.state == LesionState.REMOVED:
-            pass
-        elif self.state == LesionState.DEAD:
+        elif self.state == LesionState.REMOVED or self.state == LesionState.DEAD:
             pass
         else:
             raise ValueError(f"Unexpected Lesion state {self.state}")

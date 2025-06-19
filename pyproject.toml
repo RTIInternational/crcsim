@@ -1,0 +1,65 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "crcsim"
+version = "0.0.1"
+description = "Simulation engine for the colorectal cancer screening model"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+authors = [
+    {name = "RTI International"},
+]
+
+dependencies = [
+    "fire==0.7.0",
+    "pandas==2.1.1",
+    "numpy==1.26.4",
+]
+
+[project.scripts]
+crc-simulate = "crcsim.__main__:main"
+crc-analyze = "crcsim.analysis:main"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest==8.3.5",
+    "ruff==0.11.13",
+    "mypy==1.15.0",
+    "pre-commit==4.0.1",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+exclude = [".git", ".vscode", ".pytest_cache", ".mypy_cache", ".env"]
+
+# Ruff has a lot of additional linters that can be really helpful. Only 'E' and 'F' 
+# linters are on by default.
+[tool.ruff.lint]
+ignore = ["B008", "E501", "RET504", "B905", "N806", "N803"]
+select = [
+    "B",   # https://pypi.org/project/flake8-bugbear/
+    "E",   # https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes
+    "F",   # https://flake8.pycqa.org/en/latest/user/error-codes.html
+    "W",   # https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes
+    "I",   # https://pycqa.github.io/isort/
+    "N",   # https://github.com/PyCQA/pep8-naming
+    "C4",  # https://github.com/adamchainz/flake8-comprehensions
+    "EXE", # https://pypi.org/project/flake8-executable/
+    "ISC", # https://github.com/flake8-implicit-str-concat/flake8-implicit-str-concat
+    "ICN", # https://pypi.org/project/flake8-import-conventions/
+    "PIE", # https://pypi.org/project/flake8-pie/
+    "PT",  # https://github.com/m-burst/flake8-pytest-style
+    "RET", # https://pypi.org/project/flake8-return/
+    "SIM", # https://pypi.org/project/flake8-simplify/
+    "ERA", # https://pypi.org/project/flake8-eradicate/
+    "PLC", # https://beta.ruff.rs/docs/rules/#convention-plc
+    "RUF", # https://beta.ruff.rs/docs/rules/#ruff-specific-rules-ruf
+    "ARG", # https://beta.ruff.rs/docs/rules/#flake8-unused-arguments-arg
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["crcsim"]
