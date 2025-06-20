@@ -33,8 +33,11 @@ def test_testing_year_misalignment():
             tmp_path = Path(tmp_dir) / "parameters.json"
             with open(tmp_path, "w") as f:
                 json.dump(params, f)
-                with pytest.raises(ValueError):
-                    load_params(tmp_path)
+            with pytest.raises(
+                ValueError,
+                match="routine_end for Colonoscopy does not equal the last year",
+            ):
+                load_params(tmp_path)
 
 
 @pytest.fixture(scope="module")
@@ -203,6 +206,7 @@ def test_switching_scenario(params, case):
         id=None,
         sex=None,
         race_ethnicity=None,
+        expected_lifespan=None,
         params=params_,
         scheduler=None,
         rng=None,

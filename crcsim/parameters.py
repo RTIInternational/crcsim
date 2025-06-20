@@ -79,7 +79,7 @@ def load_params(file):
                 )
             if test_params["routine_end"] != params["routine_testing_year"][-1]:
                 raise ValueError(
-                    f"routine_start for {test_name} does not equal the last year"
+                    f"routine_end for {test_name} does not equal the last year"
                     " of routine testing specified in routine_testing_year."
                 )
 

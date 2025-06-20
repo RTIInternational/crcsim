@@ -59,7 +59,10 @@ class Output:
             writer = csv.DictWriter(f, fieldnames=field_names)
             writer.writeheader()
 
-        self.file_handle = open(self.file_name, mode="a", newline="")
+        # \NOQA is to avoid context manager linting, becuase we intentionally want to
+        # keep the file open for the lifetime of the simulation. We close it explicitly
+        # with the close method.
+        self.file_handle = open(self.file_name, mode="a", newline="")  # NOQA: SIM115
         self.writer = csv.DictWriter(self.file_handle, fieldnames=field_names)
 
     def commit(self):

@@ -140,7 +140,7 @@ def run(
                     # debugging is enabled. Constructing the string argument takes a
                     # surprisingly large portion of the overall script runtime.
                     logging.debug(
-                        f"[scheduler] send event '{str(event.message)}' at time {scheduler.time}"
+                        f"[scheduler] send event '{event.message!s}' at time {scheduler.time}"
                     )
                 handler(event.message)
 
