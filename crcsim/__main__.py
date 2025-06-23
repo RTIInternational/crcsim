@@ -4,7 +4,8 @@ import random
 
 import fire
 
-from crcsim.agent import Person, RaceEthnicity, Sex
+from crcsim.agent import Person, get_demographic
+from crcsim.enums import RaceEthnicity, Sex
 from crcsim.output import Output
 from crcsim.parameters import load_params
 from crcsim.scheduler import Scheduler
@@ -21,33 +22,9 @@ def compute_lifespan(rng: random.Random, params: dict, cohort_row: dict) -> floa
     sex = Sex(cohort_row["sex"])
     race_ethnicity = RaceEthnicity(cohort_row["race_ethnicity"])
 
-    # Find the appropriate death rate table. We don't have separate tables
-    # for all combinations of sex and race_ethnicity, so we'll need to do
-    # some imperfect combining of categories.
-    if sex == Sex.FEMALE:
-        if race_ethnicity == RaceEthnicity.WHITE_NON_HISPANIC:
-            death_rate = params["death_rate_white_female"]
-        elif race_ethnicity in (
-            RaceEthnicity.HISPANIC,
-            RaceEthnicity.BLACK_NON_HISPANIC,
-            RaceEthnicity.OTHER_NON_HISPANIC,
-        ):
-            death_rate = params["death_rate_black_female"]
-        else:
-            raise ValueError(f"Unexpected race/ethnicity value: {race_ethnicity}")
-    elif sex in (Sex.MALE, Sex.OTHER):
-        if race_ethnicity == RaceEthnicity.WHITE_NON_HISPANIC:
-            death_rate = params["death_rate_white_male"]
-        elif race_ethnicity in (
-            RaceEthnicity.HISPANIC,
-            RaceEthnicity.BLACK_NON_HISPANIC,
-            RaceEthnicity.OTHER_NON_HISPANIC,
-        ):
-            death_rate = params["death_rate_black_male"]
-        else:
-            raise ValueError(f"Unexpected race/ethnicity value: {race_ethnicity}")
-    else:
-        raise ValueError(f"Unexpected sex value: {sex}")
+    # Find the appropriate death rate table.
+    demo_string = get_demographic(sex, race_ethnicity)
+    death_rate = params[f"death_rate_{demo_string}"]
 
     # Move through the death table, searching for the age at which the
     # person's cumulative probability of death exceeds the random number we

@@ -1,7 +1,7 @@
 import csv
 from typing import Any
 
-from crcsim.agent import (
+from crcsim.enums import (
     LesionMessage,
     LesionState,
     PersonDiseaseMessage,
