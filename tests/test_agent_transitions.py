@@ -2,11 +2,10 @@ import random
 
 import pytest
 
-from crcsim.agent import (
-    Lesion,
+from crcsim.agent import Lesion, Person
+from crcsim.enums import (
     LesionMessage,
     LesionState,
-    Person,
     PersonDiseaseMessage,
     PersonDiseaseState,
     PersonTestingMessage,
@@ -94,7 +93,7 @@ def rng():
 
 @pytest.fixture
 def person(params, scheduler, rng, out):
-    return Person(
+    person = Person(
         id=0,
         sex=Sex.MALE,
         race_ethnicity=RaceEthnicity.HISPANIC,
@@ -104,6 +103,8 @@ def person(params, scheduler, rng, out):
         rng=rng,
         out=out,
     )
+    person.start()
+    return person
 
 
 @pytest.fixture
