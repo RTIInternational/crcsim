@@ -58,7 +58,7 @@ def load_params(file):
     )
 
     for sex in ("male", "female"):
-        for race in ("black", "white"):
+        for race in ("black", "white", "hispanic"):
             params[f"death_rate_{race}_{sex}"] = StepFunction(
                 x=params[f"death_rate_{race}_{sex}_ages"],
                 y=params[f"death_rate_{race}_{sex}_rates"],
