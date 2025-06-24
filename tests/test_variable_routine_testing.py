@@ -7,8 +7,8 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from crcsim.agent import (
-    Person,
+from crcsim.agent import Person
+from crcsim.enums import (
     PersonDiseaseMessage,
     PersonTestingMessage,
     PersonTreatmentMessage,
@@ -28,7 +28,13 @@ def test_testing_year_misalignment():
     # parameters of StepFunction type, and those are not JSON serializable.
     with open("parameters.json", "r") as f:
         params = json.load(f)
-        params["tests"]["Colonoscopy"]["routine_end"] = 85
+        # Variable routine testing must be turned on for this test to work.
+        params["use_variable_routine_test"] = True
+        # Change routine_end for a test. This assumes that the current parameter values
+        # are correctly aligned, so any change should break it.
+        params["tests"]["Colonoscopy"]["routine_end"] = (
+            params["tests"]["Colonoscopy"]["routine_end"] + 5
+        )
         with TemporaryDirectory() as tmp_dir:
             tmp_path = Path(tmp_dir) / "parameters.json"
             with open(tmp_path, "w") as f:
@@ -49,6 +55,9 @@ def params():
     affect these tests.
     """
     p = load_params("parameters.json")
+
+    # Variable routine testing must be turned on for this test to work.
+    p["use_variable_routine_test"] = True
 
     # All test scenarios use FIT and Colonoscopy with testing from age 50 to 75.
     p["routine_testing_year"] = list(range(50, 76))

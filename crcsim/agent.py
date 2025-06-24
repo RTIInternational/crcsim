@@ -1,170 +1,37 @@
 import bisect
 import itertools
 import math
-from enum import Enum, IntEnum, unique
+import random
 
-
-@unique
-class PersonDiseaseState(IntEnum):
-    UNINITIALIZED = 0
-    HEALTHY = 1
-    SMALL_POLYP = 2
-    MEDIUM_POLYP = 3
-    LARGE_POLYP = 4
-    PRECLINICAL_STAGE1 = 5
-    PRECLINICAL_STAGE2 = 6
-    PRECLINICAL_STAGE3 = 7
-    PRECLINICAL_STAGE4 = 8
-    CLINICAL_STAGE1 = 9
-    CLINICAL_STAGE2 = 10
-    CLINICAL_STAGE3 = 11
-    CLINICAL_STAGE4 = 12
-    DEAD = 13
-
-    def __str__(self):
-        return self.name
-
-
-@unique
-class PersonDiseaseMessage(IntEnum):
-    INIT = 0
-    POLYP_ONSET = 1
-    POLYP_MEDIUM_ONSET = 2
-    POLYP_LARGE_ONSET = 3
-    PRECLINICAL_ONSET = 4
-    PRE2_ONSET = 5
-    PRE3_ONSET = 6
-    PRE4_ONSET = 7
-    CLINICAL_ONSET = 8
-    ALL_POLYPS_REMOVED = 9
-    OTHER_DEATH = 10
-    CRC_DEATH = 11
-    POLYPECTOMY_DEATH = 12
-
-    def __str__(self):
-        return self.name
-
-
-@unique
-class PersonTestingState(IntEnum):
-    UNINITIALIZED = 0
-    ROUTINE = 1
-    DIAGNOSTIC = 2
-    SKIP_TESTING = 3
-    SURVEILLANCE = 4
-    NO_TESTING = 5
-
-    def __str__(self):
-        return self.name
-
-
-@unique
-class PersonTestingMessage(IntEnum):
-    INIT = 0
-    SYMPTOMATIC = 1
-    SCREEN_POSITIVE = 2
-    ROUTINE_IS_DIAGNOSTIC = 3
-    NOT_COMPLIANT = 4
-    RETURN_TO_ROUTINE = 5
-    NEGATIVE = 6
-    POSITIVE_POLYP = 7
-    POSITIVE_CANCER = 8
-
-    def __str__(self):
-        return self.name
-
-
-@unique
-class PersonTreatmentState(IntEnum):
-    UNINITIALIZED = 0
-    NO_TREATMENT = 1
-    TREATMENT = 2
-
-    def __str__(self):
-        return self.name
-
-
-@unique
-class PersonTreatmentMessage(IntEnum):
-    INIT = 0
-    START_TREATMENT = 1
-
-    def __str__(self):
-        return self.name
-
-
-@unique
-class LesionState(IntEnum):
-    UNINITIALIZED = 0
-    SMALL_POLYP = 1
-    MEDIUM_POLYP = 2
-    LARGE_POLYP = 3
-    PRECLINICAL_STAGE1 = 4
-    PRECLINICAL_STAGE2 = 5
-    PRECLINICAL_STAGE3 = 6
-    PRECLINICAL_STAGE4 = 7
-    CLINICAL_STAGE1 = 8
-    CLINICAL_STAGE2 = 9
-    CLINICAL_STAGE3 = 10
-    CLINICAL_STAGE4 = 11
-    REMOVED = 12
-    DEAD = 13
-
-    def __str__(self):
-        return self.name
-
-
-@unique
-class LesionMessage(IntEnum):
-    INIT = 0
-    PROGRESS_POLYP_STAGE = 1
-    PROGRESS_CANCER_STAGE = 2
-    CLINICAL_DETECTION = 3
-    BECOME_CANCER = 4
-    KILL_PERSON = 5
-
-    def __str__(self):
-        return self.name
-
-
-@unique
-class TestingRole(IntEnum):
-    ROUTINE = 1
-    DIAGNOSTIC = 2
-    SURVEILLANCE = 3
-
-    def __str__(self):
-        return self.name
-
-
-@unique
-class TreatmentRole(IntEnum):
-    INITIAL = 1
-    ONGOING = 2
-    TERMINAL = 3
-
-    def __str__(self):
-        return self.name
-
-
-@unique
-class RaceEthnicity(Enum):
-    HISPANIC = "hispanic"
-    WHITE_NON_HISPANIC = "white_non_hispanic"
-    BLACK_NON_HISPANIC = "black_non_hispanic"
-    OTHER_NON_HISPANIC = "other_non_hispanic"
-
-
-@unique
-class Sex(Enum):
-    FEMALE = "female"
-    MALE = "male"
-    OTHER = "other"
+from crcsim.enums import (
+    LesionMessage,
+    LesionState,
+    PersonDiseaseMessage,
+    PersonDiseaseState,
+    PersonTestingMessage,
+    PersonTestingState,
+    PersonTreatmentMessage,
+    PersonTreatmentState,
+    RaceEthnicity,
+    Sex,
+    TestingRole,
+    TreatmentRole,
+)
+from crcsim.output import Output
+from crcsim.scheduler import Scheduler
 
 
 class Person:
     def __init__(
-        self, id, sex, race_ethnicity, expected_lifespan, params, scheduler, rng, out
+        self,
+        id: int,
+        sex: Sex,
+        race_ethnicity: RaceEthnicity,
+        expected_lifespan: float,
+        params: dict,
+        scheduler: Scheduler,
+        rng: random.Random,
+        out: Output,
     ):
         self.id = id
         self.sex = sex
@@ -175,21 +42,21 @@ class Person:
         self.rng = rng
         self.out = out
 
-        self.lesions = []
+        self.lesions: list[Lesion] = []
         self.lesion_risk_index = None
         self.previous_lesion_onset_time = 0
 
         # testing attributes
-        self.routine_test = None
-        self.diagnostic_test = None
-        self.surveillance_test = None
+        self.routine_test: str | None = None
+        self.diagnostic_test: str | None = None
+        self.surveillance_test: str | None = None
         self.routine_is_diagnostic = False
         self.never_compliant = False
-        self.routine_compliance_history = []
-        self.previous_test_small = {}
-        self.previous_test_medium = {}
-        self.previous_test_large = {}
-        self.previous_test_age = {}
+        self.routine_compliance_history: list[bool] = []
+        self.previous_test_small: dict[str, int] = {}
+        self.previous_test_medium: dict[str, int] = {}
+        self.previous_test_large: dict[str, int] = {}
+        self.previous_test_age: dict[str, int | None] = {}
 
         # treatment attributes
         self.previous_treatment_initiation_age = None
@@ -206,6 +73,8 @@ class Person:
         self.testing_transition_timeout_event = None
 
     def start(self):
+        self.demographic = get_demographic(self.sex, self.race_ethnicity)
+
         self.never_compliant = self.rng.random() < self.params["never_compliant_rate"]
         self.choose_tests()
 
@@ -929,7 +798,7 @@ class Person:
     # exhibit_symptoms is a one-liner and can probably be included
     # as part of Lesion's symptoms timer
 
-    def is_compliant(self, test: str):
+    def is_compliant(self, test: str | None):
         if test is None:
             return False
         if (
@@ -1001,13 +870,11 @@ class Person:
             return False
         raise ValueError(f"Unexpected testing state {self.testing_state}")
 
-    def is_false_positive(self, test: str):
+    def is_false_positive(self, test: str | None):
         if test is None:
             return False
         fp = self.rng.random() < 1 - self.params["tests"][test]["specificity"]
         return fp
-
-    # on_end_year is just a wrapper for update_value - not necessary as far as I can tell
 
     def start_life_timer(self):
         self.scheduler.add_event(
@@ -1021,6 +888,10 @@ class Person:
         )
 
     def test_diagnostic(self, symptomatic: bool = False):
+        if self.diagnostic_test is None:
+            raise ValueError(
+                "Diagnostic test attempted without a diagnostic test assigned."
+            )
         if (
             self.testing_state == PersonTestingState.DIAGNOSTIC
             and self.disease_state
@@ -1205,7 +1076,7 @@ class Person:
                         test_name=self.diagnostic_test,
                         role=role,
                         time=self.scheduler.time,
-                        routine_test=self.routine_test,
+                        routine_test=self.routine_test or "None",
                     )
             else:
                 self.scheduler.add_event(
@@ -1282,12 +1153,14 @@ class Person:
                     if self.rng.random() < test_params["proportion_perforation"]:
                         self.out.add_perforation(
                             person_id=self.id,
-                            test=self.routine_test,
+                            test_name=self.routine_test,
                             role=TestingRole.ROUTINE,
                             time=self.scheduler.time,
                             routine_test=self.routine_test,
                         )
                 else:
+                    if self.routine_test is None:
+                        return
                     self.out.add_noncompliance(
                         person_id=self.id,
                         test_name=self.routine_test,
@@ -1296,6 +1169,14 @@ class Person:
                     )
 
     def test_surveillance(self, symptomatic: bool = False):
+        if self.surveillance_test is None:
+            raise ValueError(
+                "Surveillance test attempted without a surveillance test assigned."
+            )
+        if self.num_surveillance_tests_since_positive is None:
+            raise ValueError(
+                "Did not expect number of surveillance tests since positive to be null"
+            )
         if (
             self.testing_state == PersonTestingState.SURVEILLANCE
             and self.disease_state != PersonDiseaseState.DEAD
@@ -1479,7 +1360,7 @@ class Person:
                         test_name=self.surveillance_test,
                         role=TestingRole.SURVEILLANCE,
                         time=self.scheduler.time,
-                        routine_test=self.routine_test,
+                        routine_test=self.routine_test or "None",
                     )
             else:
                 self.scheduler.add_event(
@@ -1684,7 +1565,14 @@ class Person:
 class Lesion:
     id_generator = itertools.count()
 
-    def __init__(self, params, scheduler, person, rng, out):
+    def __init__(
+        self,
+        params: dict,
+        scheduler: Scheduler,
+        person: Person,
+        rng: random.Random,
+        out: Output,
+    ):
         self.id = next(Lesion.id_generator)
         self.params = params
         self.scheduler = scheduler
@@ -1970,10 +1858,11 @@ class Lesion:
                 if self.rng.random() < self.params["proportion_survive_clin1"]:
                     pass
                 else:
-                    if self.params["mean_duration_clin1_dead"] != 0:
-                        duration_clin_dead = self.rng.expovariate(
-                            1 / self.params["mean_duration_clin1_dead"]
-                        )
+                    mean_duration = self.params[
+                        f"mean_duration_clin1_dead_{self.person.demographic}"
+                    ]
+                    if mean_duration != 0:
+                        duration_clin_dead = self.rng.expovariate(1 / mean_duration)
                     else:
                         duration_clin_dead = 0
                     self.transition_timeout_event = self.scheduler.add_event(
@@ -2038,10 +1927,11 @@ class Lesion:
                 if self.rng.random() < self.params["proportion_survive_clin2"]:
                     pass
                 else:
-                    if self.params["mean_duration_clin2_dead"] != 0:
-                        duration_clin_dead = self.rng.expovariate(
-                            1 / self.params["mean_duration_clin2_dead"]
-                        )
+                    mean_duration = self.params[
+                        f"mean_duration_clin2_dead_{self.person.demographic}"
+                    ]
+                    if mean_duration != 0:
+                        duration_clin_dead = self.rng.expovariate(1 / mean_duration)
                     else:
                         duration_clin_dead = 0
                     self.transition_timeout_event = self.scheduler.add_event(
@@ -2096,10 +1986,11 @@ class Lesion:
                 if self.rng.random() < self.params["proportion_survive_clin3"]:
                     pass
                 else:
-                    if self.params["mean_duration_clin3_dead"] != 0:
-                        duration_clin_dead = self.rng.expovariate(
-                            1 / self.params["mean_duration_clin3_dead"]
-                        )
+                    mean_duration = self.params[
+                        f"mean_duration_clin3_dead_{self.person.demographic}"
+                    ]
+                    if mean_duration != 0:
+                        duration_clin_dead = self.rng.expovariate(1 / mean_duration)
                     else:
                         duration_clin_dead = 0
                     self.transition_timeout_event = self.scheduler.add_event(
@@ -2128,10 +2019,11 @@ class Lesion:
                 if self.rng.random() < self.params["proportion_survive_clin4"]:
                     pass
                 else:
-                    if self.params["mean_duration_clin4_dead"] != 0:
-                        duration_clin_dead = self.rng.expovariate(
-                            1 / self.params["mean_duration_clin4_dead"]
-                        )
+                    mean_duration = self.params[
+                        f"mean_duration_clin4_dead_{self.person.demographic}"
+                    ]
+                    if mean_duration != 0:
+                        duration_clin_dead = self.rng.expovariate(1 / mean_duration)
                     else:
                         duration_clin_dead = 0
                     self.transition_timeout_event = self.scheduler.add_event(
@@ -2224,7 +2116,7 @@ class Lesion:
             new_state=new_state,
         )
 
-    def is_detected(self, test: str):
+    def is_detected(self, test: str | None):
         if test is None:
             return False
 
@@ -2266,3 +2158,45 @@ class Lesion:
         # lesion is present. So we can view the sensitivity as the probability of a
         # positive test result.
         return self.rng.random() < sensitivity
+
+
+def get_demographic(sex: Sex, race_ethnicity: RaceEthnicity) -> str:
+    """
+    Return a string representation of a given sex and race/ethnicity combination.
+
+    We use this to get parameters that are specific to a person's demographics,
+    such as death rates and time-to-death distribution means. It's a separate function
+    rather than a Person method because it's also used in __main__.py to pre-compute
+    expected lifespans for the whole cohort at the start of the simulation.
+
+    Not all demographic combinations in the cohort files are represented in the parameters,
+    so this function also does some imperfect combination of groups.
+    """
+    if sex == Sex.FEMALE:
+        if race_ethnicity == RaceEthnicity.WHITE_NON_HISPANIC:
+            demo_string = "white_female"
+        elif race_ethnicity == RaceEthnicity.BLACK_NON_HISPANIC:
+            demo_string = "black_female"
+        elif race_ethnicity == RaceEthnicity.HISPANIC:
+            demo_string = "hispanic_female"
+        elif race_ethnicity == RaceEthnicity.OTHER_NON_HISPANIC:
+            # Imperfect combination since not all groups have separate params
+            demo_string = "black_female"
+        else:
+            raise ValueError(f"Unexpected race/ethnicity value: {race_ethnicity}")
+    elif sex in (Sex.MALE, Sex.OTHER):
+        if race_ethnicity == RaceEthnicity.WHITE_NON_HISPANIC:
+            demo_string = "white_male"
+        elif race_ethnicity == RaceEthnicity.BLACK_NON_HISPANIC:
+            demo_string = "black_male"
+        elif race_ethnicity == RaceEthnicity.HISPANIC:
+            demo_string = "hispanic_male"
+        elif race_ethnicity == RaceEthnicity.OTHER_NON_HISPANIC:
+            # Imperfect combination since not all groups have separate params
+            demo_string = "black_male"
+        else:
+            raise ValueError(f"Unexpected race/ethnicity value: {race_ethnicity}")
+    else:
+        raise ValueError(f"Unexpected sex value: {sex}")
+
+    return demo_string
