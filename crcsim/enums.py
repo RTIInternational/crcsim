@@ -157,3 +157,11 @@ class Sex(Enum):
     FEMALE = "female"
     MALE = "male"
     OTHER = "other"
+
+
+@unique
+class TestCombiningMethod(Enum):
+    SERIAL = "serial"
+    PARALLEL = "parallel"
+
+    __test__ = False

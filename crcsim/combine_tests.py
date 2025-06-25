@@ -1,14 +1,9 @@
 import json
-from enum import Enum, unique
 from pathlib import Path
 
 import fire
 
-
-@unique
-class TestCombiningMethod(str, Enum):
-    SERIAL = "serial"
-    PARALLEL = "parallel"
+from crcsim.enums import TestCombiningMethod
 
 
 def combine_tests_in_params(
@@ -88,7 +83,7 @@ def combine_tests_in_params(
     ]
 
     # Name for the new test
-    new_test_name = f"{test1}_{test2}_{how}"
+    new_test_name = f"{test1}_{test2}_{how.name.lower()}"
 
     # Add the combined test to routine_tests if not already present
     if new_test_name not in params["routine_tests"]:
