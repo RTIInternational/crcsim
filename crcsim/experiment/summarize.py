@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import s3fs  # noqa: F401
 
-S3_BUCKET_NAME = "crcsim-exp-consistent-lifespans"
+S3_BUCKET_NAME = "crcsim-exp-template"
 
 
 def main() -> None:
@@ -117,7 +117,7 @@ def add_derived_variables(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
-    """ Compute the mean and standard deviation of every analysis variable, by scenario. """
+    """Compute the mean and standard deviation of every analysis variable, by scenario."""
     groups = df.groupby("scenario")
     means = groups.mean()
     stds = groups.std()
@@ -128,12 +128,13 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
     summary = summary.reset_index()
 
     # Create a second sheet with select columns
-    select_columns = ["scenario", 
-        "Colonoscopy_performed_diagnostic_per_1k_40yo_mean", 
+    select_columns = [
+        "scenario",
+        "Colonoscopy_performed_diagnostic_per_1k_40yo_mean",
         "Colonoscopy_performed_surveillance_per_1k_40yo_mean",
-        "FIT_performed_routine_per_1k_40yo_mean", 
+        "FIT_performed_routine_per_1k_40yo_mean",
         "clin_crc_per_1k_40yo_mean",
-        "deadcrc_per_1k_40yo_mean", 
+        "deadcrc_per_1k_40yo_mean",
         "lifeobs_if_unscreened_undiagnosed_at_40_mean",
         "discounted_cost_routine_mean",
         "discounted_cost_diagnostic_mean",
@@ -159,7 +160,8 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
         "cost_treatment_initial_per_1k_40yo_mean",
         "cost_treatment_ongoing_per_1k_40yo_mean",
         "cost_treatment_terminal_per_1k_40yo_mean",
-        "discounted_lifeobs_if_unscreened_undiagnosed_at_40_mean"]
+        "discounted_lifeobs_if_unscreened_undiagnosed_at_40_mean",
+    ]
     summary_subset = summary[select_columns]
 
     return summary, summary_subset

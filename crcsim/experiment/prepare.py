@@ -86,32 +86,56 @@ def transform_initial_compliance(rate) -> Callable:
     return transform
 
 
+def transform_routine_test_proportion(test: str, proportion: float) -> Callable:
+    def transform(params):
+        params["tests"][test]["proportion"] = proportion
+
+    return transform
+
+
+def transform_lesion_risk_alpha(IRR: float) -> Callable:
+    """This transformation should be used with an IRR of 1.19 for all scenarios in all
+    experiments unless otherwise specified.
+
+    It adjusts the lesion risk alpha parameter based on the IRR (Incidence Rate Ratio).
+    This follows the latest practice in CRC modeling, to account for a theorized
+    increase in lesion incidence in recent years.
+
+    However, our base parameters were calibrated without an IRR adjustment. So we almost
+    always need to apply this transformation.
+    """
+
+    def transform(params):
+        params["lesion_risk_alpha"] = params["lesion_risk_alpha"] * IRR
+
+    return transform
+
+
 def create_scenarios() -> List:
-    # For each health center, define the initial compliance rate in the baseline
-    # scenario and the implementation scenario.
-    initial_compliance = {
-        "fqhc1": (0.522, 0.593),
-        "fqhc2": (0.154, 0.421),
-        "fqhc3": (0.519, 0.615),
-        "fqhc4": (0.278, 0.374),
-        "fqhc5": (0.383, 0.572),
-        "fqhc6": (0.211, 0.392),
-        "fqhc7": (0.257, 0.354),
-        "fqhc8": (0.190, 0.390),
+    compliance_scenarios = {
+        "no_screening": 0.0,
+        "50_percent_compliance": 0.5,
+        "100_percent_compliance": 1.0,
     }
 
     scenarios = []
 
-    for fqhc, rates in initial_compliance.items():
-        baseline = Scenario(
-            name=f"{fqhc}_baseline", params=get_default_params()
-        ).transform(transform_initial_compliance(rates[0]))
-        scenarios.append(baseline)
+    for scenario, screening_rate in compliance_scenarios.items():
+        scenarios.append(
+            Scenario(name=f"Colonoscopy_{scenario}", params=get_default_params())
+            .transform(transform_initial_compliance(screening_rate))
+            # Base params assign FIT to all agents. So we swap here, and don't need to
+            # transform test proportions for the FIT scenarios.
+            .transform(transform_routine_test_proportion("Colonoscopy", 1.0))
+            .transform(transform_routine_test_proportion("FIT", 0.0))
+            .transform(transform_lesion_risk_alpha(1.19))
+        )
 
-        implementation = Scenario(
-            name=f"{fqhc}_implementation", params=get_default_params()
-        ).transform(transform_initial_compliance(rates[1]))
-        scenarios.append(implementation)
+        scenarios.append(
+            Scenario(name=f"FIT_{scenario}", params=get_default_params())
+            .transform(transform_initial_compliance(screening_rate))
+            .transform(transform_lesion_risk_alpha(1.19))
+        )
 
     return scenarios
 
