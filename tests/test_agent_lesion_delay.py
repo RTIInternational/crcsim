@@ -22,19 +22,24 @@ def params():
     return load_params("parameters.json")
 
 
-# The expected values for these test cases were obtained using the AnyLogic
-# model. (It doesn't provide these values in its output, and it doesn't provide
-# a way to specify these inputs. Temporary, manual editing of the model was
-# necessary to produce these.)
+# When we first ported the crcsim model from AnyLogic to Python, this test module
+# compared the lesion delay calculations against values from the AnyLogic model.
+# We recalibrated the model since then (see exp-2022-calibration branch), which
+# changed the lesion delay parameters. So the Py-AnyLogic comparison no longer
+# holds. Instead, the expected values are now drawn from the recalibrated model.
+# This is somewhat circular, since we're now comparing the recalibrated Python model
+# against itself. However, it could still be useful to ensure that future changes
+# don't introduce unexpected changes in lesion delay calculation. If the model is
+# recalibrated again, the expected values in this test must be updated.
 cases = [
-    {"rand": 0.25, "risk": 1, "prev_time": 0, "expected": 59.90341968549087},
+    {"rand": 0.25, "risk": 1, "prev_time": 0, "expected": 52.90728289807124},
     {"rand": 0.75, "risk": 1, "prev_time": 0, "expected": None},
-    {"rand": 0.25, "risk": 1.5, "prev_time": 0, "expected": 55.9078353458828},
-    {"rand": 0.75, "risk": 1.5, "prev_time": 0, "expected": 92.65420370423578},
-    {"rand": 0.25, "risk": 1, "prev_time": 42.765, "expected": 19.142669350065958},
+    {"rand": 0.25, "risk": 1.5, "prev_time": 0, "expected": 48.83940241505936},
+    {"rand": 0.75, "risk": 1.5, "prev_time": 0, "expected": 84.92693097696306},
+    {"rand": 0.25, "risk": 1, "prev_time": 42.765, "expected": 13.314891572288182},
     {"rand": 0.75, "risk": 1, "prev_time": 42.765, "expected": None},
-    {"rand": 0.25, "risk": 1.5, "prev_time": 42.765, "expected": 15.385543679216134},
-    {"rand": 0.75, "risk": 1.5, "prev_time": 42.765, "expected": 54.7823855224176},
+    {"rand": 0.25, "risk": 1.5, "prev_time": 42.765, "expected": 9.565521932047488},
+    {"rand": 0.75, "risk": 1.5, "prev_time": 42.765, "expected": 49.568749158781245},
 ]
 
 
@@ -44,6 +49,7 @@ def test_delay(case, params):
         id=None,
         race_ethnicity=None,
         sex=None,
+        expected_lifespan=params["max_age"],
         params=params,
         scheduler=MockScheduler(time=case["prev_time"]),
         rng=MockRandom(value=case["rand"]),
@@ -51,7 +57,6 @@ def test_delay(case, params):
     )
     p.lesion_risk_index = case["risk"]
     p.previous_lesion_onset_time = case["prev_time"]
-    p.expected_lifespan = params["max_age"]
 
     observed = p.compute_lesion_delay()
 

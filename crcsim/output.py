@@ -1,7 +1,7 @@
 import csv
 from typing import Any
 
-from crcsim.agent import (
+from crcsim.enums import (
     LesionMessage,
     LesionState,
     PersonDiseaseMessage,
@@ -59,7 +59,10 @@ class Output:
             writer = csv.DictWriter(f, fieldnames=field_names)
             writer.writeheader()
 
-        self.file_handle = open(self.file_name, mode="a", newline="")
+        # \NOQA is to avoid context manager linting, becuase we intentionally want to
+        # keep the file open for the lifetime of the simulation. We close it explicitly
+        # with the close method.
+        self.file_handle = open(self.file_name, mode="a", newline="")  # NOQA: SIM115
         self.writer = csv.DictWriter(self.file_handle, fieldnames=field_names)
 
     def commit(self):
@@ -137,13 +140,14 @@ class Output:
             {"record_type": "lifespan", "person_id": person_id, "time": time}
         )
 
-    def add_routine_test_chosen(self, person_id: Any, test_name: str):
+    def add_routine_test_chosen(self, person_id: Any, test_name: str, time: float):
         self.rows.append(
             {
                 "record_type": "test_chosen",
                 "person_id": person_id,
                 "test_name": test_name,
                 "role": TestingRole.ROUTINE,
+                "time": time,
             }
         )
 

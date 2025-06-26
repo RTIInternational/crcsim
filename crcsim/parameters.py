@@ -58,10 +58,29 @@ def load_params(file):
     )
 
     for sex in ("male", "female"):
-        for race in ("black", "white"):
+        for race in ("black", "white", "hispanic"):
             params[f"death_rate_{race}_{sex}"] = StepFunction(
                 x=params[f"death_rate_{race}_{sex}_ages"],
                 y=params[f"death_rate_{race}_{sex}_rates"],
             )
+
+    if params["use_variable_routine_test"]:
+        params["variable_routine_test"] = StepFunction(
+            x=params["routine_testing_year"], y=params["routine_test_by_year"]
+        )
+        for test_name, test_params in params["tests"].items():
+            # Indexing 0 and -1 here safely returns the min and max testing years,
+            # because initializing the StepFunction raises an error if the testing
+            # years are not sorted in increasing order.
+            if test_params["routine_start"] != params["routine_testing_year"][0]:
+                raise ValueError(
+                    f"routine_start for {test_name} does not equal the first year"
+                    " of routine testing specified in routine_testing_year."
+                )
+            if test_params["routine_end"] != params["routine_testing_year"][-1]:
+                raise ValueError(
+                    f"routine_end for {test_name} does not equal the last year"
+                    " of routine testing specified in routine_testing_year."
+                )
 
     return params
