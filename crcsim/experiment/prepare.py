@@ -1,21 +1,27 @@
 import json
 import random
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import fire
+import pandas as pd
 
 SEED: int = 49865106
 NUM_ITERATIONS: int = 100
 
 
 class Scenario:
-    def __init__(self, name: str, params: Dict):
+    def __init__(self, name: str, params: Dict, cohort: pd.DataFrame):
         self.name = name
         self.params = params
+        self.cohort = cohort
 
-    def transform(self, transformer: Callable) -> "Scenario":
+    def transform_params(self, transformer: Callable) -> "Scenario":
         transformer(self.params)
+        return self
+
+    def transform_cohort(self, transformer: Callable) -> "Scenario":
+        transformer(self.cohort)
         return self
 
 
@@ -65,6 +71,8 @@ def prepare_experiment_dir(
         with open(scenario_params_file, mode="w") as f:
             json.dump(obj=scenario.params, fp=f, indent=2)
 
+        # TODO: add a step to save the scenario's cohort to a CSV file
+
     seeds = [rng.randint(1, 2**31 - 1) for _ in range(num_iterations)]
     seeds_file = scenarios_dir / "seeds.txt"
     with open(seeds_file, mode="w") as f:
@@ -93,6 +101,21 @@ def transform_routine_test_proportion(test: str, proportion: float) -> Callable:
     return transform
 
 
+def get_default_cohort() -> pd.DataFrame:
+    return pd.read_csv("cohort.csv")
+
+
+def transform_cohort(column: str, value: Any) -> Callable:
+    def transform(cohort: pd.DataFrame):
+        if column not in cohort.columns:
+            raise ValueError(
+                f"Column '{column}' does not exist in the cohort DataFrame."
+            )
+        cohort[column] = value
+
+    return transform
+
+
 def transform_lesion_risk_alpha(IRR: float) -> Callable:
     """This transformation should be used with an IRR of 1.19 for all scenarios in all
     experiments unless otherwise specified.
@@ -112,6 +135,8 @@ def transform_lesion_risk_alpha(IRR: float) -> Callable:
 
 
 def create_scenarios() -> List:
+    # TODO: add a demographic iterable that we'll loop over to create scenarios
+
     compliance_scenarios = {
         "no_screening": 0.0,
         "50_percent_compliance": 0.5,
@@ -120,21 +145,33 @@ def create_scenarios() -> List:
 
     scenarios = []
 
+    # TODO: nest the compliance scenarios loop inside a demographic loop.
+    # Add transformers to transform the cohort for each demographic.
+    # Eg: Scenario.transform_cohort(transform_cohort("race_ethnicity", "black_non_hispanic")). NOQA: E501
+
     for scenario, screening_rate in compliance_scenarios.items():
         scenarios.append(
-            Scenario(name=f"Colonoscopy_{scenario}", params=get_default_params())
-            .transform(transform_initial_compliance(screening_rate))
+            Scenario(
+                name=f"Colonoscopy_{scenario}",
+                params=get_default_params(),
+                cohort=get_default_cohort(),
+            )
+            .transform_params(transform_initial_compliance(screening_rate))
             # Base params assign FIT to all agents. So we swap here, and don't need to
-            # transform test proportions for the FIT scenarios.
-            .transform(transform_routine_test_proportion("Colonoscopy", 1.0))
-            .transform(transform_routine_test_proportion("FIT", 0.0))
-            .transform(transform_lesion_risk_alpha(1.19))
+            # transform_params test proportions for the FIT scenarios.
+            .transform_params(transform_routine_test_proportion("Colonoscopy", 1.0))
+            .transform_params(transform_routine_test_proportion("FIT", 0.0))
+            .transform_params(transform_lesion_risk_alpha(1.19))
         )
 
         scenarios.append(
-            Scenario(name=f"FIT_{scenario}", params=get_default_params())
-            .transform(transform_initial_compliance(screening_rate))
-            .transform(transform_lesion_risk_alpha(1.19))
+            Scenario(
+                name=f"FIT_{scenario}",
+                params=get_default_params(),
+                cohort=get_default_cohort(),
+            )
+            .transform_params(transform_initial_compliance(screening_rate))
+            .transform_params(transform_lesion_risk_alpha(1.19))
         )
 
     return scenarios

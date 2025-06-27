@@ -1,4 +1,6 @@
-# Experiment Template
+# Testing demographic-specific survival rates
+
+TODO: flesh out - this is still template content.
 
 This branch is a template for `crcsim` experiments. It can be used as a starting point for new experiments.
 

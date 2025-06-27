@@ -12,16 +12,18 @@ if [ ! -d "$output_dir" ]; then
   mkdir $output_dir
 fi
 
-aws s3 cp "s3://crcsim-exp-template/scenarios/$scenario/params.json" "./params.json" 
+aws s3 cp "s3://crcsim-exp-demog-specific-survival/scenarios/$scenario/params.json" "./params.json" 
+aws s3 cp "s3://crcsim-exp-demog-specific-survival/scenarios/$scenario/cohort.csv" "./scenario_cohort.csv" 
+
 
 crc-simulate \
     --npeople=$npeople \
     --seed=$seed \
     --params-file=./params.json \
-    --cohort-file=./cohort.csv &&
+    --cohort-file=./scenario_cohort.csv &&
 
 crc-analyze \
     --params-file=./params.json &&
 
-aws s3 cp ./results.csv "s3://crcsim-exp-template/scenarios/$scenario/results_$iteration.csv"
-aws s3 cp ./output.csv "s3://crcsim-exp-template/scenarios/$scenario/output_$iteration.csv"
+aws s3 cp ./results.csv "s3://crcsim-exp-demog-specific-survival/scenarios/$scenario/results_$iteration.csv"
+aws s3 cp ./output.csv "s3://crcsim-exp-demog-specific-survival/scenarios/$scenario/output_$iteration.csv"
