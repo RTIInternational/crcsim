@@ -26,4 +26,3 @@ crc-analyze \
     --params-file=./params.json &&
 
 aws s3 cp ./results.csv "s3://crcsim-exp-demog-specific-survival/scenarios/$scenario/results_$iteration.csv"
-aws s3 cp ./output.csv "s3://crcsim-exp-demog-specific-survival/scenarios/$scenario/output_$iteration.csv"
