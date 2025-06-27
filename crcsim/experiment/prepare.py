@@ -135,7 +135,7 @@ def transform_lesion_risk_alpha(IRR: float) -> Callable:
 
 
 def create_scenarios() -> List:
-    # TODO: add a demographic iterable that we'll loop over to create scenarios
+    # TODO: add sex and race_ethnicity iterables that we'll loop over to create scenarios
 
     compliance_scenarios = {
         "no_screening": 0.0,
@@ -145,7 +145,7 @@ def create_scenarios() -> List:
 
     scenarios = []
 
-    # TODO: nest the compliance scenarios loop inside a demographic loop.
+    # TODO: nest the compliance scenarios loop inside demographic loops.
     # Add transformers to transform the cohort for each demographic.
     # Eg: Scenario.transform_cohort(transform_cohort("race_ethnicity", "black_non_hispanic")). NOQA: E501
 
@@ -162,6 +162,7 @@ def create_scenarios() -> List:
             .transform_params(transform_routine_test_proportion("Colonoscopy", 1.0))
             .transform_params(transform_routine_test_proportion("FIT", 0.0))
             .transform_params(transform_lesion_risk_alpha(1.19))
+            # TODO: apply transform_cohort
         )
 
         scenarios.append(
@@ -172,6 +173,7 @@ def create_scenarios() -> List:
             )
             .transform_params(transform_initial_compliance(screening_rate))
             .transform_params(transform_lesion_risk_alpha(1.19))
+            # TODO: apply transform_cohort
         )
 
     return scenarios
