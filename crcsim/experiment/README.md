@@ -1,30 +1,21 @@
-# Testing demographic-specific survival rates
+# CRC Simulation Experiment: Testing demographic-specific survival rates
 
-TODO: flesh out - this is still template content.
+This experiment aims to isolate the effects of sex, race/ethnicity, and compliance. The options for each category are as follows:
+- Sex: male, female
+- Race/ethnicity: Hispanic, Black non-Hispanic, White non-Hispanic, and other non-Hispanic
+- Compliance scenario: no screening, 50 percent compliance, and 100 percent compliance
 
-This branch is a template for `crcsim` experiments. It can be used as a starting point for new experiments.
+## Experiment Design
 
-## Experiment Workflow
-
-`crcsim` experiments are managed as branches. We never merge experiment branches into main. Instead, each experiment branch has all relevant files in the `crcsim/experiment` directory, and is kept as a separate branch for historical record.
-
-To create a new experiment, follow these steps:
-
-1. **Make a branch with the `exp-*` prefix**. Sometimes, if a new experiment is tightly coupled to an existing experiment, it may make more sense to branch off another experiment branch. But in general, branching from this template should be the default.
-1. Edit files as described below to define the new experiment.
-1. Update this README to describe the experiment in detail.
-1. Open a **Draft** pull request and follow the steps in the pull request template. A few specific callouts:
-    - Don't run the experiment until the pull request reviewer has approved.
-    - Make sure to revisit the README after you've run the experiment and add a detailed summary of results.
-    - **Don't merge the experiment branch into `main`**. Instead, close the Draft PR with an informative comment once the experiment has been completed.
+This experiment differs in that it creates a new cohort.csv file for each scenario based on the inputs to sexes and race_ethnicities in the create_scenarios function in prepare.py.
 
 ## Scenarios
 
-`crcsim` experiments consist of a set of scenarios. Each scenario is defined by its own parameter file. The scenarios are chosen to test a certain hypothesis.
+`crcsim` experiments consist of a set of scenarios. Each scenario is defined by its own parameter file and cohort file. The scenarios are chosen to test a certain hypothesis.
 
-For example, this template includes a few basic scenarios: 0%, 50% and 100% screening compliance for Colonoscopies and FIT tests. Production experiments typically include more complex scenario sets to test real-world hypotheses.
+For example, this template includes a few basic scenarios: 0%, 50% and 100% screening compliance for Colonoscopies and FIT tests, sex (male and female), and race/ethnicity (Hispanic, NonHispanic Black, NonHispanic White, and Other NonHispanic). Production experiments typically include more complex scenario sets to test real-world hypotheses.
 
-Typically, an experiment's unique logic is defined by the `prepare.py` script. This script transforms a set of base parameters to create each scenario.
+Typically, an experiment's unique logic is defined by the `prepare.py` script. This script transforms a set of base parameters and cohorts to create each scenario.
 
 The rest of the steps - running the simulation with `simulate.py` and analyzing it with `summarize.py` - are mostly consistent between experiments. However, those files do need a few tweaks too, as described in the next section.
 
@@ -37,6 +28,9 @@ To use this code as the basis for a new experiment, you should edit the followin
 - [./run_iteration.sh](./run_iteration.sh) - Change the s3 bucket name, or if the experiment is substantially different, the series of commands each run entails.
 - [./summarize.py](./summarize.py) - You may want to change the derived variables that are added to the model results.
 - [./parameters.json](./parameters.json) - You may want to edit the base parameter values.
+
+## Results
+TODO: update with results once approved
 
 ## Running the experiment on AWS
 

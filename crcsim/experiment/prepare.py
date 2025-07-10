@@ -1,4 +1,5 @@
 import json
+import csv
 import random
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -49,10 +50,13 @@ def prepare_experiment_dir(
         scenarios/
             base/
                 params.json
+                cohort.csv
             intervention1/
                 params.json
+                cohort.csv
             intervention2/
                 params.json
+                cohort.csv
             seeds.txt (will contain 2 lines, one seed per line)
     """
 
@@ -71,7 +75,8 @@ def prepare_experiment_dir(
         with open(scenario_params_file, mode="w") as f:
             json.dump(obj=scenario.params, fp=f, indent=2)
 
-        # TODO: add a step to save the scenario's cohort to a CSV file
+        scenario_cohort_file = scenario_dir / "cohort.csv"
+        scenario.cohort.to_csv(scenario_cohort_file, index=False)
 
     seeds = [rng.randint(1, 2**31 - 1) for _ in range(num_iterations)]
     seeds_file = scenarios_dir / "seeds.txt"
@@ -135,7 +140,17 @@ def transform_lesion_risk_alpha(IRR: float) -> Callable:
 
 
 def create_scenarios() -> List:
-    # TODO: add sex and race_ethnicity iterables that we'll loop over to create scenarios
+    sexes = [
+        "female",
+        "male",
+    ]
+
+    race_ethnicities = [
+        #"hispanic",
+        "black_non_hispanic",
+        #"white_non_hispanic",
+        #"other_non_hispanic",
+    ]
 
     compliance_scenarios = {
         "no_screening": 0.0,
@@ -145,37 +160,36 @@ def create_scenarios() -> List:
 
     scenarios = []
 
-    # TODO: nest the compliance scenarios loop inside demographic loops.
-    # Add transformers to transform the cohort for each demographic.
-    # Eg: Scenario.transform_cohort(transform_cohort("race_ethnicity", "black_non_hispanic")). NOQA: E501
-
     for scenario, screening_rate in compliance_scenarios.items():
-        scenarios.append(
-            Scenario(
-                name=f"Colonoscopy_{scenario}",
-                params=get_default_params(),
-                cohort=get_default_cohort(),
-            )
-            .transform_params(transform_initial_compliance(screening_rate))
-            # Base params assign FIT to all agents. So we swap here, and don't need to
-            # transform_params test proportions for the FIT scenarios.
-            .transform_params(transform_routine_test_proportion("Colonoscopy", 1.0))
-            .transform_params(transform_routine_test_proportion("FIT", 0.0))
-            .transform_params(transform_lesion_risk_alpha(1.19))
-            # TODO: apply transform_cohort
-        )
+        for sex in sexes:
+            for race_ethnicity in race_ethnicities:
+                scenarios.append(
+                    Scenario(
+                        name=f"Colonoscopy_{scenario}_{sex}_{race_ethnicity}",
+                        params=get_default_params(),
+                        cohort=get_default_cohort(),
+                    )
+                    .transform_params(transform_initial_compliance(screening_rate))
+                    # Base params assign FIT to all agents. So we swap here, and don't need to
+                    # transform_params test proportions for the FIT scenarios.
+                    .transform_params(transform_routine_test_proportion("Colonoscopy", 1.0))
+                    .transform_params(transform_routine_test_proportion("FIT", 0.0))
+                    .transform_params(transform_lesion_risk_alpha(1.19))
+                    .transform_cohort(transform_cohort("sex", sex))
+                    .transform_cohort(transform_cohort("race_ethnicity", race_ethnicity))
+                )
 
-        scenarios.append(
-            Scenario(
-                name=f"FIT_{scenario}",
-                params=get_default_params(),
-                cohort=get_default_cohort(),
-            )
-            .transform_params(transform_initial_compliance(screening_rate))
-            .transform_params(transform_lesion_risk_alpha(1.19))
-            # TODO: apply transform_cohort
-        )
-
+                scenarios.append(
+                    Scenario(
+                        name=f"FIT_{scenario}_{sex}_{race_ethnicity}",
+                        params=get_default_params(),
+                        cohort=get_default_cohort(),
+                    )
+                    .transform_params(transform_initial_compliance(screening_rate))
+                    .transform_params(transform_lesion_risk_alpha(1.19))
+                    .transform_cohort(transform_cohort("sex", sex))
+                    .transform_cohort(transform_cohort("race_ethnicity", race_ethnicity))
+                )
     return scenarios
 
 
