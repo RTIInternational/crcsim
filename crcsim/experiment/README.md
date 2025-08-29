@@ -30,7 +30,16 @@ To use this code as the basis for a new experiment, you should edit the followin
 - [./parameters.json](./parameters.json) - You may want to edit the base parameter values.
 
 ## Results
-TODO: update with results once approved
+| Run                                                | CRC cases | CRC deaths | Life years |
+| -------------------------------------------------- |:---------:|:----------:| ----------:|
+| Colonoscopy_no_screening_female_black_non_hispanic | 83.47     | 34.93      | 80.07      |
+| Colonoscopy_no_screening_female_white_non_hispanic | 91.01     | 38.36      | 82.14      |
+| Colonoscopy_no_screening_male_black_non_hispanic   | 64.40     | 25.75      | 75.33      |
+| Colonoscopy_no_screening_male_white_non_hispanic   | 75.70     | 30.86      | 78.45      |
+| FIT_no_screening_female_black_non_hispanic         | 83.47     | 34.93      | 80.07      |
+| FIT_no_screening_female_white_non_hispanic         | 91.01     | 38.36      | 82.14      |
+| FIT_no_screening_male_black_non_hispanic           | 64.40     | 25.75      | 75.33      |
+| FIT_no_screening_male_white_non_hispanic           | 75.70     | 30.86      | 78.45      |
 
 ## Running the experiment on AWS
 
