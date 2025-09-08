@@ -128,11 +128,32 @@ def create_scenarios() -> List:
             # transform test proportions for the FIT scenarios.
             .transform(transform_routine_test_proportion("Colonoscopy", 1.0))
             .transform(transform_routine_test_proportion("FIT", 0.0))
+            .transform(transform_routine_test_proportion("Blood", 0.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_TestCombiningMethod.PARALLEL", 0.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_TestCombiningMethod.SERIAL", 0.0))
             .transform(transform_lesion_risk_alpha(1.19))
         )
 
         scenarios.append(
             Scenario(name=f"FIT_{scenario}", params=get_default_params())
+            .transform(transform_initial_compliance(screening_rate))
+            .transform(transform_lesion_risk_alpha(1.19))
+        )
+
+        scenarios.append(
+            Scenario(name=f"Blood_{scenario}", params=get_default_params())
+            .transform(transform_initial_compliance(screening_rate))
+            .transform(transform_lesion_risk_alpha(1.19))
+        )
+
+        scenarios.append(
+            Scenario(name=f"FIT_Blood_TestCombiningMethod.PARALLEL_{scenario}", params=get_default_params())
+            .transform(transform_initial_compliance(screening_rate))
+            .transform(transform_lesion_risk_alpha(1.19))
+        ) 
+        
+        scenarios.append(
+            Scenario(name=f"FIT_Blood_TestCombiningMethod.SERIAL_{scenario}", params=get_default_params())
             .transform(transform_initial_compliance(screening_rate))
             .transform(transform_lesion_risk_alpha(1.19))
         )
