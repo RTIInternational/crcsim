@@ -2,6 +2,10 @@
 
 This branch is a template for `crcsim` experiments. It can be used as a starting point for new experiments.
 
+## Experiment Goal
+
+Test the combination of FIT and blood tests in parallel and serial.
+
 ## Experiment Workflow
 
 `crcsim` experiments are managed as branches. We never merge experiment branches into main. Instead, each experiment branch has all relevant files in the `crcsim/experiment` directory, and is kept as a separate branch for historical record.
