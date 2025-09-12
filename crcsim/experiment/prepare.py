@@ -129,32 +129,52 @@ def create_scenarios() -> List:
             .transform(transform_routine_test_proportion("Colonoscopy", 1.0))
             .transform(transform_routine_test_proportion("FIT", 0.0))
             .transform(transform_routine_test_proportion("Blood", 0.0))
-            .transform(transform_routine_test_proportion("FIT_Blood_TestCombiningMethod.PARALLEL", 0.0))
-            .transform(transform_routine_test_proportion("FIT_Blood_TestCombiningMethod.SERIAL", 0.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_parallel", 0.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_serial", 0.0))
             .transform(transform_lesion_risk_alpha(1.19))
         )
 
         scenarios.append(
             Scenario(name=f"FIT_{scenario}", params=get_default_params())
             .transform(transform_initial_compliance(screening_rate))
+            .transform(transform_routine_test_proportion("Colonoscopy", 0.0))
+            .transform(transform_routine_test_proportion("FIT", 1.0))
+            .transform(transform_routine_test_proportion("Blood", 0.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_parallel", 0.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_serial", 0.0))
             .transform(transform_lesion_risk_alpha(1.19))
         )
 
         scenarios.append(
             Scenario(name=f"Blood_{scenario}", params=get_default_params())
             .transform(transform_initial_compliance(screening_rate))
+            .transform(transform_routine_test_proportion("Colonoscopy", 0.0))
+            .transform(transform_routine_test_proportion("FIT", 0.0))
+            .transform(transform_routine_test_proportion("Blood", 1.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_parallel", 0.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_serial", 0.0))
             .transform(transform_lesion_risk_alpha(1.19))
         )
 
         scenarios.append(
-            Scenario(name=f"FIT_Blood_TestCombiningMethod.PARALLEL_{scenario}", params=get_default_params())
+            Scenario(name=f"FIT_Blood_parallel_{scenario}", params=get_default_params())
             .transform(transform_initial_compliance(screening_rate))
+            .transform(transform_routine_test_proportion("Colonoscopy", 0.0))
+            .transform(transform_routine_test_proportion("FIT", 0.0))
+            .transform(transform_routine_test_proportion("Blood", 0.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_parallel", 1.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_serial", 0.0))
             .transform(transform_lesion_risk_alpha(1.19))
-        ) 
-        
+        )
+
         scenarios.append(
-            Scenario(name=f"FIT_Blood_TestCombiningMethod.SERIAL_{scenario}", params=get_default_params())
+            Scenario(name=f"FIT_Blood_serial_{scenario}", params=get_default_params())
             .transform(transform_initial_compliance(screening_rate))
+            .transform(transform_routine_test_proportion("Colonoscopy", 0.0))
+            .transform(transform_routine_test_proportion("FIT", 0.0))
+            .transform(transform_routine_test_proportion("Blood", 0.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_parallel", 0.0))
+            .transform(transform_routine_test_proportion("FIT_Blood_serial", 1.0))
             .transform(transform_lesion_risk_alpha(1.19))
         )
 

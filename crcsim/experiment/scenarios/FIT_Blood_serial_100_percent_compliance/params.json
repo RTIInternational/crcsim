@@ -55,7 +55,7 @@
   "surveillance_freq_cancer_rest": 5,
   "surveillance_end_age": 85,
   "use_conditional_compliance": true,
-  "initial_compliance_rate": 0.5,
+  "initial_compliance_rate": 1.0,
   "never_compliant_rate": 0.0,
   "diagnostic_compliance_rate": 1.0,
   "surveillance_compliance_rate": 1.0,
@@ -93,7 +93,7 @@
   ],
   "tests": {
     "FIT": {
-      "proportion": 1.0,
+      "proportion": 0.0,
       "routine_start": 45,
       "routine_end": 75,
       "routine_freq": 1,
@@ -352,14 +352,14 @@
         0.0
       ]
     },
-    "FIT_Blood_TestCombiningMethod.PARALLEL": {
+    "FIT_Blood_parallel": {
       "sensitivity_polyp1": 0.07000000000000006,
       "sensitivity_polyp2": 0.07000000000000006,
       "sensitivity_polyp3": 0.3214,
       "sensitivity_cancer": 0.9558,
       "specificity": 0.873,
       "cost": 922,
-      "proportion": 1.0,
+      "proportion": 0.0,
       "routine_start": 45,
       "routine_end": 75,
       "routine_freq": 1,
@@ -432,7 +432,7 @@
         0.0
       ]
     },
-    "FIT_Blood_TestCombiningMethod.SERIAL": {
+    "FIT_Blood_serial": {
       "sensitivity_polyp1": 0.0,
       "sensitivity_polyp2": 0.0,
       "sensitivity_polyp3": 0.0286,
@@ -517,8 +517,8 @@
     "FIT",
     "Colonoscopy",
     "Blood",
-    "FIT_Blood_TestCombiningMethod.PARALLEL",
-    "FIT_Blood_TestCombiningMethod.SERIAL"
+    "FIT_Blood_parallel",
+    "FIT_Blood_serial"
   ],
   "diagnostic_test": "Colonoscopy",
   "surveillance_test": "Colonoscopy",

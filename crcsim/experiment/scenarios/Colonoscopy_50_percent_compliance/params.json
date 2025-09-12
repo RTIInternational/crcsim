@@ -352,7 +352,7 @@
         0.0
       ]
     },
-    "FIT_Blood_TestCombiningMethod.PARALLEL": {
+    "FIT_Blood_parallel": {
       "sensitivity_polyp1": 0.07000000000000006,
       "sensitivity_polyp2": 0.07000000000000006,
       "sensitivity_polyp3": 0.3214,
@@ -432,7 +432,7 @@
         0.0
       ]
     },
-    "FIT_Blood_TestCombiningMethod.SERIAL": {
+    "FIT_Blood_serial": {
       "sensitivity_polyp1": 0.0,
       "sensitivity_polyp2": 0.0,
       "sensitivity_polyp3": 0.0286,
@@ -517,8 +517,8 @@
     "FIT",
     "Colonoscopy",
     "Blood",
-    "FIT_Blood_TestCombiningMethod.PARALLEL",
-    "FIT_Blood_TestCombiningMethod.SERIAL"
+    "FIT_Blood_parallel",
+    "FIT_Blood_serial"
   ],
   "diagnostic_test": "Colonoscopy",
   "surveillance_test": "Colonoscopy",
