@@ -86,6 +86,7 @@ def transform_initial_compliance(rate) -> Callable:
 
     return transform
 
+
 def transform_diagnostic_compliance(rate) -> Callable:
     def transform(params):
         params["diagnostic_compliance_rate"] = rate
@@ -126,43 +127,61 @@ def create_scenarios() -> List:
     extra_low_initial_stage_4_treatment_cost = 80_000
 
     diagnostic_compliance_rates = {
-        "100% Compliance": 1.0,
-        "80% Compliance": 0.8,
+        "100%": 1.0,
+        "80%": 0.8,
     }
     scenarios = []
 
     for fqhc, rates in initial_compliance.items():
         for compliance, rate in diagnostic_compliance_rates.items():
-            # IRR = 1.19
             baseline = (
-                Scenario(name=f"{fqhc}_{compliance}_baseline", params=get_default_params()).transform(
-                    transform_initial_compliance(rates[0])
-                    ).transform(transform_diagnostic_compliance(rate))
+                Scenario(
+                    name=f"{fqhc}_{compliance}_baseline", params=get_default_params()
                 )
+                .transform(transform_initial_compliance(rates[0]))
+                .transform(transform_diagnostic_compliance(rate))
+            )
             scenarios.append(baseline)
 
             implementation = (
-                Scenario(name=f"{fqhc}_implementation", params=get_default_params()
-                    ).transform(transform_initial_compliance(rates[1]))
-                    .transform(transform_diagnostic_compliance(rate))
+                Scenario(
+                    name=f"{fqhc}_{compliance}_implementation",
+                    params=get_default_params(),
+                )
+                .transform(transform_initial_compliance(rates[1]))
+                .transform(transform_diagnostic_compliance(rate))
             )
             scenarios.append(implementation)
 
             # Sensitivity analysis 2. Lower cost for stage III and stage IV initial phase
             baseline_low_cost = deepcopy(baseline)
             baseline_low_cost.transform(
-                transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
-            ).transform(transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost))
-            baseline_low_cost.name = f"{fqhc}_baseline_low_initial_treat_cost"
+                transform_treatment_cost(
+                    "3", "initial", low_initial_stage_3_treatment_cost
+                )
+            ).transform(
+                transform_treatment_cost(
+                    "4", "initial", low_initial_stage_4_treatment_cost
+                )
+            )
+            baseline_low_cost.name = (
+                f"{fqhc}_{compliance}_baseline_low_initial_treat_cost"
+            )
             scenarios.append(baseline_low_cost)
 
             implementation_low_cost = deepcopy(implementation)
             implementation_low_cost.transform(
-                transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
+                transform_treatment_cost(
+                    "3", "initial", low_initial_stage_3_treatment_cost
+                )
             ).transform(
-                transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
+                transform_treatment_cost(
+                    "4", "initial", low_initial_stage_4_treatment_cost
+                )
             )
-            implementation_low_cost.name = f"{fqhc}_implementation_low_initial_treat_cost"
+            implementation_low_cost.name = (
+                f"{fqhc}_{compliance}_implementation_low_initial_treat_cost"
+            )
             scenarios.append(implementation_low_cost)
 
             # Sensitivity analysis 2a. Extra low cost for stage III and stage IV initial phase
@@ -176,7 +195,9 @@ def create_scenarios() -> List:
                     "4", "initial", extra_low_initial_stage_4_treatment_cost
                 )
             )
-            baseline_extra_low_cost.name = f"{fqhc}_{compliance}_baseline_extra_low_initial_treat_cost"
+            baseline_extra_low_cost.name = (
+                f"{fqhc}_{compliance}_baseline_extra_low_initial_treat_cost"
+            )
             scenarios.append(baseline_extra_low_cost)
 
             implementation_extra_low_cost = deepcopy(implementation)
