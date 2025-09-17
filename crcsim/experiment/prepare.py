@@ -80,21 +80,21 @@ def get_default_params() -> Dict:
     return params
 
 
-def transform_initial_compliance(rate) -> Callable:
+def transform_initial_compliance(rate: float) -> Callable:
     def transform(params):
         params["initial_compliance_rate"] = rate
 
     return transform
 
 
-def transform_diagnostic_compliance(rate) -> Callable:
+def transform_diagnostic_compliance(rate: float) -> Callable:
     def transform(params):
         params["diagnostic_compliance_rate"] = rate
 
     return transform
 
 
-def transform_treatment_cost(stage, phase, cost) -> Callable:
+def transform_treatment_cost(stage: str, phase: str, cost: float) -> Callable:
     def transform(params):
         params[f"cost_treatment_stage{stage}_{phase}"] = cost
 
@@ -132,14 +132,14 @@ def create_scenarios() -> List:
     }
     scenarios = []
 
-    for fqhc, rates in initial_compliance.items():
-        for compliance, rate in diagnostic_compliance_rates.items():
+    for fqhc, sreening_rates in initial_compliance.items():
+        for compliance, diagnostic_rate in diagnostic_compliance_rates.items():
             baseline = (
                 Scenario(
                     name=f"{fqhc}_{compliance}_baseline", params=get_default_params()
                 )
-                .transform(transform_initial_compliance(rates[0]))
-                .transform(transform_diagnostic_compliance(rate))
+                .transform(transform_initial_compliance(sreening_rates[0]))
+                .transform(transform_diagnostic_compliance(diagnostic_rate))
             )
             scenarios.append(baseline)
 
@@ -148,8 +148,8 @@ def create_scenarios() -> List:
                     name=f"{fqhc}_{compliance}_implementation",
                     params=get_default_params(),
                 )
-                .transform(transform_initial_compliance(rates[1]))
-                .transform(transform_diagnostic_compliance(rate))
+                .transform(transform_initial_compliance(sreening_rates[1]))
+                .transform(transform_diagnostic_compliance(diagnostic_rate))
             )
             scenarios.append(implementation)
 
