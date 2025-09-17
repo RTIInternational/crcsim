@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import s3fs  # noqa: F401
 
-S3_BUCKET_NAME = "crcsim-exp-template"
+S3_BUCKET_NAME = "crcsim-exp-fqhc-diagnostic-compliance-comparison"
 
 
 def main() -> None:
@@ -66,13 +66,17 @@ def combine_run_results() -> pd.DataFrame:
 
             print(f"Fetching results for {scenario}, iteration {iteration_name}")
 
-            df = pd.read_csv(
-                f"s3://{S3_BUCKET_NAME}/scenarios/{scenario}/results_{iteration_name}.csv"
-            )
-            df["scenario"] = scenario
-            df["iteration"] = iteration
-
-            dfs.append(df)
+            try:
+                df = pd.read_csv(
+                    f"s3://{S3_BUCKET_NAME}/scenarios/{scenario}/results_{iteration_name}.csv"
+                )
+                df["scenario"] = scenario
+                df["iteration"] = iteration
+                dfs.append(df)
+            except FileNotFoundError:
+                print(
+                    f"Results file not found for {scenario}, iteration {iteration_name}"
+                )
 
     if len(dfs) == 0:
         raise RuntimeError("No simulation results files were found")

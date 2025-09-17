@@ -127,8 +127,8 @@ def create_scenarios() -> List:
     extra_low_initial_stage_4_treatment_cost = 80_000
 
     diagnostic_compliance_rates = {
-        "100%": 1.0,
-        "80%": 0.8,
+        "100Compliance": 1.0,
+        "80Compliance": 0.8,
     }
     scenarios = []
 

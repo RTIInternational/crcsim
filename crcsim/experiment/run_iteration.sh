@@ -12,7 +12,7 @@ if [ ! -d "$output_dir" ]; then
   mkdir $output_dir
 fi
 
-aws s3 cp "s3://crcsim-exp-fqhc-diangostic-compliance-comparison/scenarios/$scenario/params.json" "./params.json" 
+aws s3 cp "s3://crcsim-exp-fqhc-diagnostic-compliance-comparison/scenarios/$scenario/params.json" "./params.json" 
 
 crc-simulate \
     --npeople=$npeople \
@@ -23,4 +23,5 @@ crc-simulate \
 crc-analyze \
     --params-file=./params.json &&
 
-aws s3 cp ./results.csv "s3://crcsim-exp-fqhc-diangostic-compliance-comparison/scenarios/$scenario/results_$iteration.csv"
+aws s3 cp ./results.csv "s3://crcsim-exp-fqhc-diagnostic-compliance-comparison/scenarios/$scenario/results_$iteration.csv"
+aws s3 cp ./output.csv "s3://crcsim-exp-fqhc-diagnostic-compliance-comparison/scenarios/$scenario/output_$iteration.csv"
