@@ -1,10 +1,10 @@
-# Experiment: Test 100% and 80% Diagnostic Compliance for FQHCs
+# Experiment: Test 70% and 80% Diagnostic Compliance for Baseline and Implementation respectively for FQHCs
 
-This branch tests 80% and 100% compliance for FQHCs 1-8 with differing screening uptake and low and extra low costs for Stage III and Stage IV inital treatment.
+This branch tests 70% and 80% compliance for Baseline and Implementation, respectively, for FQHCs 1-8 with differing screening uptake and low and extra low costs for Stage III and Stage IV inital treatment.
 
 ## Results
 
-The results for the 100% diagnostic compliance match a previous run from April 2025. The results differ between 80% and 100% compliance.
+The results differ between 70% and 80% compliance.
 
 ## Experiment Workflow
 
