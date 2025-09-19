@@ -1,5 +1,6 @@
 import json
 import random
+from copy import deepcopy
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
@@ -79,64 +80,120 @@ def get_default_params() -> Dict:
     return params
 
 
-def transform_initial_compliance(rate) -> Callable:
+def transform_initial_compliance(rate: float) -> Callable:
     def transform(params):
         params["initial_compliance_rate"] = rate
 
     return transform
 
 
-def transform_routine_test_proportion(test: str, proportion: float) -> Callable:
+def transform_diagnostic_compliance(rate: float) -> Callable:
     def transform(params):
-        params["tests"][test]["proportion"] = proportion
+        params["diagnostic_compliance_rate"] = rate
 
     return transform
 
 
-def transform_lesion_risk_alpha(IRR: float) -> Callable:
-    """This transformation should be used with an IRR of 1.19 for all scenarios in all
-    experiments unless otherwise specified.
-
-    It adjusts the lesion risk alpha parameter based on the IRR (Incidence Rate Ratio).
-    This follows the latest practice in CRC modeling, to account for a theorized
-    increase in lesion incidence in recent years.
-
-    However, our base parameters were calibrated without an IRR adjustment. So we almost
-    always need to apply this transformation.
-    """
-
+def transform_treatment_cost(stage: str, phase: str, cost: float) -> Callable:
     def transform(params):
-        params["lesion_risk_alpha"] = params["lesion_risk_alpha"] * IRR
+        params[f"cost_treatment_stage{stage}_{phase}"] = cost
 
     return transform
 
 
 def create_scenarios() -> List:
-    compliance_scenarios = {
-        "no_screening": 0.0,
-        "50_percent_compliance": 0.5,
-        "100_percent_compliance": 1.0,
+    # For each health center, define the initial compliance rate in the baseline
+    # scenario and the implementation scenario and vary diagnostic compliance.
+    initial_compliance = {
+        "fqhc1": (0.522, 0.593),
+        "fqhc2": (0.154, 0.421),
+        "fqhc3": (0.519, 0.568),
+        "fqhc4": (0.278, 0.374),
+        "fqhc5": (0.383, 0.572),
+        "fqhc6": (0.211, 0.392),
+        "fqhc7": (0.257, 0.354),
+        "fqhc8": (0.190, 0.390),
     }
+    low_initial_stage_3_treatment_cost = 67_300
+    low_initial_stage_4_treatment_cost = 97_931
+    extra_low_initial_stage_3_treatment_cost = 50_000
+    extra_low_initial_stage_4_treatment_cost = 80_000
 
     scenarios = []
 
-    for scenario, screening_rate in compliance_scenarios.items():
-        scenarios.append(
-            Scenario(name=f"Colonoscopy_{scenario}", params=get_default_params())
-            .transform(transform_initial_compliance(screening_rate))
-            # Base params assign FIT to all agents. So we swap here, and don't need to
-            # transform test proportions for the FIT scenarios.
-            .transform(transform_routine_test_proportion("Colonoscopy", 1.0))
-            .transform(transform_routine_test_proportion("FIT", 0.0))
-            .transform(transform_lesion_risk_alpha(1.19))
+    for fqhc, sreening_rates in initial_compliance.items():
+        baseline = (
+            Scenario(
+                name=f"{fqhc}_{'70compliance'}_baseline", params=get_default_params()
+            )
+            .transform(transform_initial_compliance(sreening_rates[0]))
+            .transform(transform_diagnostic_compliance(0.7))
         )
+        scenarios.append(baseline)
 
-        scenarios.append(
-            Scenario(name=f"FIT_{scenario}", params=get_default_params())
-            .transform(transform_initial_compliance(screening_rate))
-            .transform(transform_lesion_risk_alpha(1.19))
+        implementation = (
+            Scenario(
+                name=f"{fqhc}_{'80compliance'}_implementation",
+                params=get_default_params(),
+            )
+            .transform(transform_initial_compliance(sreening_rates[1]))
+            .transform(transform_diagnostic_compliance(0.8))
         )
+        scenarios.append(implementation)
 
+        # Sensitivity analysis 2. Lower cost for stage III and stage IV initial phase
+        baseline_low_cost = deepcopy(baseline)
+        baseline_low_cost.transform(
+            transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
+        ).transform(
+            transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
+        )
+        baseline_low_cost.name = (
+            f"{fqhc}_{'70compliance'}_baseline_low_initial_treat_cost"
+        )
+        scenarios.append(baseline_low_cost)
+
+        implementation_low_cost = deepcopy(implementation)
+        implementation_low_cost.transform(
+            transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
+        ).transform(
+            transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
+        )
+        implementation_low_cost.name = (
+            f"{fqhc}_{'80compliance'}_implementation_low_initial_treat_cost"
+        )
+        scenarios.append(implementation_low_cost)
+
+        # Sensitivity analysis 2a. Extra low cost for stage III and stage IV initial phase
+        baseline_extra_low_cost = deepcopy(baseline)
+        baseline_extra_low_cost.transform(
+            transform_treatment_cost(
+                "3", "initial", extra_low_initial_stage_3_treatment_cost
+            )
+        ).transform(
+            transform_treatment_cost(
+                "4", "initial", extra_low_initial_stage_4_treatment_cost
+            )
+        )
+        baseline_extra_low_cost.name = (
+            f"{fqhc}_{'70compliance'}_baseline_extra_low_initial_treat_cost"
+        )
+        scenarios.append(baseline_extra_low_cost)
+
+        implementation_extra_low_cost = deepcopy(implementation)
+        implementation_extra_low_cost.transform(
+            transform_treatment_cost(
+                "3", "initial", extra_low_initial_stage_3_treatment_cost
+            )
+        ).transform(
+            transform_treatment_cost(
+                "4", "initial", extra_low_initial_stage_4_treatment_cost
+            )
+        )
+        implementation_extra_low_cost.name = (
+            f"{fqhc}_{'80compliance'}_implementation_extra_low_initial_treat_cost"
+        )
+        scenarios.append(implementation_extra_low_cost)
     return scenarios
 
 
