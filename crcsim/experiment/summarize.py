@@ -125,10 +125,14 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
     groups = df.groupby("scenario")
     means = groups.mean()
     stds = groups.std()
+    medians = groups.median()
     means.columns = [f"{c}_mean" for c in means.columns]
     stds.columns = [f"{c}_std" for c in stds.columns]
-    interleaved_columns = chain.from_iterable(zip(means.columns, stds.columns))
-    summary = pd.concat([means, stds], axis="columns")[interleaved_columns]
+    medians.columns = [f"{c}_median" for c in medians.columns]
+    interleaved_columns = chain.from_iterable(
+        zip(means.columns, stds.columns, medians.columns)
+    )
+    summary = pd.concat([means, stds, medians], axis="columns")[interleaved_columns]
     summary = summary.reset_index()
 
     # Create a second sheet with select columns
@@ -138,7 +142,9 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
         "Colonoscopy_performed_surveillance_per_1k_40yo_mean",
         "FIT_performed_routine_per_1k_40yo_mean",
         "clin_crc_per_1k_40yo_mean",
+        "clin_crc_per_1k_40yo_median",
         "deadcrc_per_1k_40yo_mean",
+        "deadcrc_per_1k_40yo_median",
         "lifeobs_if_unscreened_undiagnosed_at_40_mean",
         "discounted_cost_routine_mean",
         "discounted_cost_diagnostic_mean",
@@ -165,6 +171,7 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
         "cost_treatment_ongoing_per_1k_40yo_mean",
         "cost_treatment_terminal_per_1k_40yo_mean",
         "discounted_lifeobs_if_unscreened_undiagnosed_at_40_mean",
+        "discounted_lifeobs_if_unscreened_undiagnosed_at_40_median",
     ]
     summary_subset = summary[select_columns]
 
