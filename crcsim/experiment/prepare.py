@@ -101,13 +101,6 @@ def transform_treatment_cost(stage: str, phase: str, cost: float) -> Callable:
     return transform
 
 
-def transform_lesion_risk_alpha(IRR: float) -> Callable:
-    def transform(params):
-        params["lesion_risk_alpha"] = params["lesion_risk_alpha"] * IRR
-
-    return transform
-
-
 def create_scenarios() -> List:
     # For each health center, define the initial compliance rate in the baseline
     # scenario and the implementation scenario and vary diagnostic compliance.
@@ -126,94 +119,81 @@ def create_scenarios() -> List:
     extra_low_initial_stage_3_treatment_cost = 50_000
     extra_low_initial_stage_4_treatment_cost = 80_000
 
-    diagnostic_compliance_rates = {
-        "100Compliance": 1.0,
-        "80Compliance": 0.8,
-    }
     scenarios = []
 
     for fqhc, sreening_rates in initial_compliance.items():
-        for compliance, diagnostic_rate in diagnostic_compliance_rates.items():
-            baseline = (
-                Scenario(
-                    name=f"{fqhc}_{compliance}_baseline", params=get_default_params()
-                )
-                .transform(transform_initial_compliance(sreening_rates[0]))
-                .transform(transform_diagnostic_compliance(diagnostic_rate))
+        baseline = (
+            Scenario(
+                name=f"{fqhc}_{'70compliance'}_baseline", params=get_default_params()
             )
-            scenarios.append(baseline)
+            .transform(transform_initial_compliance(sreening_rates[0]))
+            .transform(transform_diagnostic_compliance(0.7))
+        )
+        scenarios.append(baseline)
 
-            implementation = (
-                Scenario(
-                    name=f"{fqhc}_{compliance}_implementation",
-                    params=get_default_params(),
-                )
-                .transform(transform_initial_compliance(sreening_rates[1]))
-                .transform(transform_diagnostic_compliance(diagnostic_rate))
+        implementation = (
+            Scenario(
+                name=f"{fqhc}_{'80compliance'}_implementation",
+                params=get_default_params(),
             )
-            scenarios.append(implementation)
+            .transform(transform_initial_compliance(sreening_rates[1]))
+            .transform(transform_diagnostic_compliance(0.8))
+        )
+        scenarios.append(implementation)
 
-            # Sensitivity analysis 2. Lower cost for stage III and stage IV initial phase
-            baseline_low_cost = deepcopy(baseline)
-            baseline_low_cost.transform(
-                transform_treatment_cost(
-                    "3", "initial", low_initial_stage_3_treatment_cost
-                )
-            ).transform(
-                transform_treatment_cost(
-                    "4", "initial", low_initial_stage_4_treatment_cost
-                )
-            )
-            baseline_low_cost.name = (
-                f"{fqhc}_{compliance}_baseline_low_initial_treat_cost"
-            )
-            scenarios.append(baseline_low_cost)
+        # Sensitivity analysis 2. Lower cost for stage III and stage IV initial phase
+        baseline_low_cost = deepcopy(baseline)
+        baseline_low_cost.transform(
+            transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
+        ).transform(
+            transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
+        )
+        baseline_low_cost.name = (
+            f"{fqhc}_{'70compliance'}_baseline_low_initial_treat_cost"
+        )
+        scenarios.append(baseline_low_cost)
 
-            implementation_low_cost = deepcopy(implementation)
-            implementation_low_cost.transform(
-                transform_treatment_cost(
-                    "3", "initial", low_initial_stage_3_treatment_cost
-                )
-            ).transform(
-                transform_treatment_cost(
-                    "4", "initial", low_initial_stage_4_treatment_cost
-                )
-            )
-            implementation_low_cost.name = (
-                f"{fqhc}_{compliance}_implementation_low_initial_treat_cost"
-            )
-            scenarios.append(implementation_low_cost)
+        implementation_low_cost = deepcopy(implementation)
+        implementation_low_cost.transform(
+            transform_treatment_cost("3", "initial", low_initial_stage_3_treatment_cost)
+        ).transform(
+            transform_treatment_cost("4", "initial", low_initial_stage_4_treatment_cost)
+        )
+        implementation_low_cost.name = (
+            f"{fqhc}_{'80compliance'}_implementation_low_initial_treat_cost"
+        )
+        scenarios.append(implementation_low_cost)
 
-            # Sensitivity analysis 2a. Extra low cost for stage III and stage IV initial phase
-            baseline_extra_low_cost = deepcopy(baseline)
-            baseline_extra_low_cost.transform(
-                transform_treatment_cost(
-                    "3", "initial", extra_low_initial_stage_3_treatment_cost
-                )
-            ).transform(
-                transform_treatment_cost(
-                    "4", "initial", extra_low_initial_stage_4_treatment_cost
-                )
+        # Sensitivity analysis 2a. Extra low cost for stage III and stage IV initial phase
+        baseline_extra_low_cost = deepcopy(baseline)
+        baseline_extra_low_cost.transform(
+            transform_treatment_cost(
+                "3", "initial", extra_low_initial_stage_3_treatment_cost
             )
-            baseline_extra_low_cost.name = (
-                f"{fqhc}_{compliance}_baseline_extra_low_initial_treat_cost"
+        ).transform(
+            transform_treatment_cost(
+                "4", "initial", extra_low_initial_stage_4_treatment_cost
             )
-            scenarios.append(baseline_extra_low_cost)
+        )
+        baseline_extra_low_cost.name = (
+            f"{fqhc}_{'70compliance'}_baseline_extra_low_initial_treat_cost"
+        )
+        scenarios.append(baseline_extra_low_cost)
 
-            implementation_extra_low_cost = deepcopy(implementation)
-            implementation_extra_low_cost.transform(
-                transform_treatment_cost(
-                    "3", "initial", extra_low_initial_stage_3_treatment_cost
-                )
-            ).transform(
-                transform_treatment_cost(
-                    "4", "initial", extra_low_initial_stage_4_treatment_cost
-                )
+        implementation_extra_low_cost = deepcopy(implementation)
+        implementation_extra_low_cost.transform(
+            transform_treatment_cost(
+                "3", "initial", extra_low_initial_stage_3_treatment_cost
             )
-            implementation_extra_low_cost.name = (
-                f"{fqhc}_{compliance}_implementation_extra_low_initial_treat_cost"
+        ).transform(
+            transform_treatment_cost(
+                "4", "initial", extra_low_initial_stage_4_treatment_cost
             )
-            scenarios.append(implementation_extra_low_cost)
+        )
+        implementation_extra_low_cost.name = (
+            f"{fqhc}_{'80compliance'}_implementation_extra_low_initial_treat_cost"
+        )
+        scenarios.append(implementation_extra_low_cost)
     return scenarios
 
 
