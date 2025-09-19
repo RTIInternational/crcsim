@@ -52,6 +52,7 @@ class Person:
         self.surveillance_test: str | None = None
         self.routine_is_diagnostic = False
         self.never_compliant = False
+        self.diagnostic_noncompliant = False
         self.routine_compliance_history: list[bool] = []
         self.previous_test_small: dict[str, int] = {}
         self.previous_test_medium: dict[str, int] = {}
@@ -813,11 +814,22 @@ class Person:
             and self.routine_is_diagnostic
         ):
             # Determine routine testing compliance probability.
-            # First, if the person is never compliant, set to zero.
             # If this is the first time the person has been eligible for a routine test
             # or if we are using unconditional compliance, use the rules for initial
             # compliance. Otherwise use the rules for conditional compliance.
-            if self.never_compliant:
+            if self.never_compliant or (
+                self.params["propagate_diagnostic_noncompliance"]
+                and self.diagnostic_noncompliant
+            ):
+                # This block handles two cases where the probability of compliance is
+                # always zero:
+                # 1. The person has been set as "never compliant" based on the
+                # "never_compliant_rate" parameter.
+                # 2. The person was noncompliant with a diagnostic test, and the model
+                # is set to propagate diagnostic noncompliance. This means that people
+                # who are noncompliant with a diagnostic test are not compliant with all
+                # following routine tests. Note that such people can still be compliant
+                # with future diagnostic tests caused by a lesion that becomes symptomatic.
                 compliance_prob = 0
             elif (
                 self.params["use_conditional_compliance"] is True
@@ -1079,6 +1091,15 @@ class Person:
                         routine_test=self.routine_test or "None",
                     )
             else:
+                # This parameter is used to make the person noncompliant for all
+                # future routine tests if the "propagate_diagnostic_noncompliance"
+                # parameter is enabled. We only want that behavior if the person is
+                # not compliant with a diagnostic test that followed a positive screening
+                # test. If routine_is_diagnostic (ie, the routine test is colonoscopy),
+                # the testing role is ROUTINE, and we don't want to propagate noncompliance.
+                if role == TestingRole.DIAGNOSTIC:
+                    self.diagnostic_noncompliant = True
+
                 self.scheduler.add_event(
                     message=PersonTestingMessage.NOT_COMPLIANT,
                     handler=self.handle_testing_message,
