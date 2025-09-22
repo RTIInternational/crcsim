@@ -78,6 +78,7 @@
   "surveillance_end_age": 85,
 
   "use_conditional_compliance": true,
+  "propagate_diagnostic_noncompliance": true,
   "initial_compliance_rate": 1.0,
   "never_compliant_rate": 0.0,
   "diagnostic_compliance_rate": 1.0,
