@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[project]
+name = "crcsim-experiment"
+version = "0.0.1"
+description = "Experiment scripts for the colorectal cancer screening model"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "RTI International"},
+]
+
+dependencies = [
+    # Clone the specific commit of the model that you want to use for the experiment
+    "crcsim @ git+https://github.com/RTIInternational/crcsim.git@6c264ca5e35c1b9ae20a6e4b95818f6e00970d71",
+    "fire==0.5.0",
+    "pandas==2.1.1",
+    "openpyxl==3.0.9",
+    "wheel==0.41.2",
+    "matplotlib==3.8.0",
+    "s3fs==2023.10.0",
+    "fsspec==2023.10.0",
+    "aiobotocore[awscli,boto3]==2.7.0",
+]
+
+[tool.uv]
+# Any development dependencies specific to the experiment can go here
+dev-dependencies = []
+
+[tool.hatch.build.targets.wheel]
+only-include = ["*.py", "*.csv", "*.json", "*.md", "*.sh"]
