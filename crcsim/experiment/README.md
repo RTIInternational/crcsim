@@ -1,10 +1,10 @@
-# Experiment: Test 100% and 80% Diagnostic Compliance for FQHCs
+# Experiment: Test exp-diagnostic-and-screening-compliance-interaction with 100% and 80% Diagnostic Compliance for FQHCs
 
-This branch tests 80% and 100% compliance for FQHCs 1-8 with differing screening uptake and low and extra low costs for Stage III and Stage IV inital treatment and a new parameter propagate_diagnostic_noncompliance set to true.
+This branch tests 80% and 100% compliance for FQHCs 1-8 with differing screening uptake and low and extra low costs for Stage III and Stage IV inital treatment and a new parameter propagate_diagnostic_noncompliance set to true.The branch was created from the branch diagnostic-and-screening-compliance-interaction to test the newly merged propagate_diagnostic_noncompliance parameter.
 
 ## Results
 
-PENDING
+The results show a small difference between a previous 100% and 80% compliance for FQHCs. Results are included in the summary folder.
 
 ## Experiment Workflow
 
