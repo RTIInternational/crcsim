@@ -16,9 +16,9 @@ authors = [
 ]
 
 dependencies = [
-    # Clone the specific commit of the model that you want to use for the experiment
-    "crcsim @ git+https://github.com/RTIInternational/crcsim.git@6c264ca5e35c1b9ae20a6e4b95818f6e00970d71",
-    "fire==0.5.0",
+    # installing crcsim from latest commit on main to get propagate noncompliance feature
+    "crcsim @ git+https://github.com/RTIInternational/crcsim.git@c4e08bffba34c07d18b784c0632de506a36611e8",
+    "fire==0.7.0",
     "pandas==2.1.1",
     "openpyxl==3.0.9",
     "wheel==0.41.2",

@@ -139,43 +139,39 @@ def create_scenarios() -> List:
     }
 
     propagate_diagnostic_noncompliance = {
-        "Diagnostic_Noncompliance": True,
-        "NO_Diagnostic_Noncompliance": False,
+        "Propagation_on": True,
+        "Propagation_off": False,
     }
     scenarios = []
 
     for fqhc, sreening_rates in initial_compliance.items():
         for compliance, diagnostic_rate in diagnostic_compliance_rates.items():
             for (
-                diagnostic_noncompliance,
-                diagnostic_noncompliance_bool,
+                propogation_name,
+                propagation_value,
             ) in propagate_diagnostic_noncompliance.items():
                 baseline = (
                     Scenario(
-                        name=f"{diagnostic_noncompliance}_{fqhc}_{compliance}_baseline",
+                        name=f"{propogation_name}_{fqhc}_{compliance}_baseline",
                         params=get_default_params(),
                     )
                     .transform(transform_initial_compliance(sreening_rates[0]))
                     .transform(transform_diagnostic_compliance(diagnostic_rate))
                     .transform(
-                        transform_propagate_diagnostic_noncompliance(
-                            diagnostic_noncompliance_bool
-                        )
+                        transform_propagate_diagnostic_noncompliance(propagation_value)
                     )
                 )
                 scenarios.append(baseline)
 
                 implementation = (
                     Scenario(
-                        name=f"{diagnostic_noncompliance}_{fqhc}_{compliance}_implementation",
+                        name=f"{propogation_name}_{fqhc}_{compliance}_implementation",
                         params=get_default_params(),
                     )
                     .transform(transform_initial_compliance(sreening_rates[1]))
                     .transform(transform_diagnostic_compliance(diagnostic_rate))
                     .transform(
-                        transform_propagate_diagnostic_noncompliance(
-                            diagnostic_noncompliance_bool
-                        )
+                        transform_propagate_diagnostic_noncompliance(propagation_value)
                     )
                 )
                 scenarios.append(implementation)
@@ -191,7 +187,7 @@ def create_scenarios() -> List:
                         "4", "initial", low_initial_stage_4_treatment_cost
                     )
                 )
-                baseline_low_cost.name = f"{diagnostic_noncompliance}_{fqhc}_{compliance}_baseline_low_initial_treat_cost"
+                baseline_low_cost.name = f"{propogation_name}_{fqhc}_{compliance}_baseline_low_initial_treat_cost"
                 scenarios.append(baseline_low_cost)
 
                 implementation_low_cost = deepcopy(implementation)
@@ -204,7 +200,7 @@ def create_scenarios() -> List:
                         "4", "initial", low_initial_stage_4_treatment_cost
                     )
                 )
-                implementation_low_cost.name = f"{diagnostic_noncompliance}_{fqhc}_{compliance}_implementation_low_initial_treat_cost"
+                implementation_low_cost.name = f"{propogation_name}_{fqhc}_{compliance}_implementation_low_initial_treat_cost"
                 scenarios.append(implementation_low_cost)
 
                 # Sensitivity analysis 2a. Extra low cost for stage III and stage IV initial phase
@@ -218,7 +214,7 @@ def create_scenarios() -> List:
                         "4", "initial", extra_low_initial_stage_4_treatment_cost
                     )
                 )
-                baseline_extra_low_cost.name = f"{diagnostic_noncompliance}_{fqhc}_{compliance}_baseline_extra_low_initial_treat_cost"
+                baseline_extra_low_cost.name = f"{propogation_name}_{fqhc}_{compliance}_baseline_extra_low_initial_treat_cost"
                 scenarios.append(baseline_extra_low_cost)
 
                 implementation_extra_low_cost = deepcopy(implementation)
@@ -231,7 +227,7 @@ def create_scenarios() -> List:
                         "4", "initial", extra_low_initial_stage_4_treatment_cost
                     )
                 )
-                implementation_extra_low_cost.name = f"{diagnostic_noncompliance}_{fqhc}_{compliance}_implementation_extra_low_initial_treat_cost"
+                implementation_extra_low_cost.name = f"{propogation_name}_{fqhc}_{compliance}_implementation_extra_low_initial_treat_cost"
                 scenarios.append(implementation_extra_low_cost)
     return scenarios
 
