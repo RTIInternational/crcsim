@@ -247,9 +247,10 @@ wheels = [
 [[package]]
 name = "crcsim"
 version = "0.0.1"
-source = { git = "https://github.com/RTIInternational/crcsim.git?rev=6c264ca5e35c1b9ae20a6e4b95818f6e00970d71#6c264ca5e35c1b9ae20a6e4b95818f6e00970d71" }
+source = { git = "https://github.com/RTIInternational/crcsim.git?rev=c4e08bffba34c07d18b784c0632de506a36611e8#c4e08bffba34c07d18b784c0632de506a36611e8" }
 dependencies = [
     { name = "fire" },
+    { name = "numpy" },
     { name = "pandas" },
 ]
 
@@ -272,8 +273,8 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "aiobotocore", extras = ["awscli", "boto3"], specifier = "==2.7.0" },
-    { name = "crcsim", git = "https://github.com/RTIInternational/crcsim.git?rev=6c264ca5e35c1b9ae20a6e4b95818f6e00970d71" },
-    { name = "fire", specifier = "==0.5.0" },
+    { name = "crcsim", git = "https://github.com/RTIInternational/crcsim.git?rev=c4e08bffba34c07d18b784c0632de506a36611e8" },
+    { name = "fire", specifier = "==0.7.0" },
     { name = "fsspec", specifier = "==2023.10.0" },
     { name = "matplotlib", specifier = "==3.8.0" },
     { name = "openpyxl", specifier = "==3.0.9" },
@@ -314,13 +315,12 @@ wheels = [
 
 [[package]]
 name = "fire"
-version = "0.5.0"
+version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "six" },
     { name = "termcolor" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/94/ed/3b9a10605163f48517931083aee8364d4d6d3bb1aa9b75eb0a4a5e9fbfc1/fire-0.5.0.tar.gz", hash = "sha256:a6b0d49e98c8963910021f92bba66f65ab440da2982b78eb1bbf95a0a34aacc6", size = 88282, upload-time = "2022-12-12T20:36:31.024Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/b6/82c7e601d6d3c3278c40b7bd35e17e82aa227f050aa9f66cb7b7fce29471/fire-0.7.0.tar.gz", hash = "sha256:961550f07936eaf65ad1dc8360f2b2bf8408fad46abbfa4d2a3794f8d2a95cdf", size = 87189, upload-time = "2024-10-01T14:29:31.585Z" }
 
 [[package]]
 name = "fonttools"

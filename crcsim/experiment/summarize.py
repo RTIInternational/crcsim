@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import s3fs  # noqa: F401
 
-S3_BUCKET_NAME = "crcsim-exp-fqhc-diagnostic-and-screening-compliance-interaction"
+S3_BUCKET_NAME = "crcsim-exp-fqhc-diagnostic-and-screening-compliance-together"
 
 
 def main() -> None:
@@ -125,10 +125,14 @@ def summarize_results(df: pd.DataFrame) -> pd.DataFrame:
     groups = df.groupby("scenario")
     means = groups.mean()
     stds = groups.std()
+    medians = groups.median()
     means.columns = [f"{c}_mean" for c in means.columns]
     stds.columns = [f"{c}_std" for c in stds.columns]
-    interleaved_columns = chain.from_iterable(zip(means.columns, stds.columns))
-    summary = pd.concat([means, stds], axis="columns")[interleaved_columns]
+    medians.columns = [f"{c}_median" for c in medians.columns]
+    interleaved_columns = chain.from_iterable(
+        zip(means.columns, stds.columns, medians.columns)
+    )
+    summary = pd.concat([means, stds, medians], axis="columns")[interleaved_columns]
     summary = summary.reset_index()
 
     # Create a second sheet with select columns
