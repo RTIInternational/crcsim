@@ -1,6 +1,6 @@
 # Experiment: Test exp-diagnostic-and-screening-compliance-interaction with 100% and 80% Diagnostic Compliance for FQHCs
 
-This branch tests 80% and 100% compliance for FQHCs 1-8 with differing screening uptake and low and extra low costs for Stage III and Stage IV inital treatment and a new parameter propagate_diagnostic_noncompliance set to true.The branch was created from the branch diagnostic-and-screening-compliance-interaction (#435d041) to test the newly merged propagate_diagnostic_noncompliance parameter.
+This branch tests 80% and 100% compliance for FQHCs 1-8 with differing screening uptake and low and extra low costs for Stage III and Stage IV inital treatment and a new parameter propagate_diagnostic_noncompliance toggled on and off.The branch was created from the branch diagnostic-and-screening-compliance-interaction (#435d041) to test the newly merged propagate_diagnostic_noncompliance parameter.
 
 ## Results
 
@@ -70,7 +70,7 @@ The subdirectories and files in `scenarios/` must be uploaded to AWS S3 for the 
 
 To upload the files to S3, run
 ```
-aws s3 cp ./scenarios s3://crcsim-exp-fqhc-diagnostic-and-screening-compliance-interaction/scenarios --recursive
+aws s3 cp ./scenarios s3://crcsim-exp-fqhc-diagnostic-and-screening-compliance-interaction-together/scenarios --recursive
 ```
 *(Another note: this manual step is necessary because `boto3` does not include functionality to upload a directory to S3 recursively. Future experiments could improve this workflow by writing a function to upload the directory recursively in `prepare.py`. Or submit a patch to resolve https://github.com/boto/boto3/issues/358)*
 
