@@ -1,6 +1,6 @@
-# Experiment: Test 100% and 80% Diagnostic Compliance for FQHCs
+# Experiment: Test 100% and 80% Diagnostic Compliance for FQHCs and No Screening, All FIT, and ALL Colonocscopy
 
-This branch tests 80% and 100% compliance for FQHCs 1-8 with differing screening uptake and low and extra low costs for Stage III and Stage IV inital treatment.
+This branch tests 80% and 100% compliance for FQHCs 1-8 with differing screening uptake, differing test costs, and low and extra low costs for Stage III and Stage IV inital treatment. Scenarios for no screening, 100% colonoscopy, and 100% FIT were also added.
 
 ## Results
 
@@ -70,7 +70,7 @@ The subdirectories and files in `scenarios/` must be uploaded to AWS S3 for the 
 
 To upload the files to S3, run
 ```
-aws s3 cp ./scenarios s3://crcsim-exp-fqhc-diagnostic-compliance-comparison/scenarios --recursive
+aws s3 cp ./scenarios s3://crcsim-exp-fqhc-diagnostic-compliance-comp-additional-scenarios/scenarios --recursive
 ```
 *(Another note: this manual step is necessary because `boto3` does not include functionality to upload a directory to S3 recursively. Future experiments could improve this workflow by writing a function to upload the directory recursively in `prepare.py`. Or submit a patch to resolve https://github.com/boto/boto3/issues/358)*
 
