@@ -27,6 +27,11 @@ class Test(Enum):
 
 
 @unique
+class IRR(Enum):
+    irr = 1.19
+
+
+@unique
 class ConditionalComplianceParam(Enum):
     PREV_COMPLIANT = "compliance_rate_given_prev_compliant"
     NOT_PREV_COMPLIANT = "compliance_rate_given_not_prev_compliant"
@@ -199,57 +204,54 @@ def transform_lesion_risk_alpha(IRR: float) -> Callable:
 def create_scenarios() -> List:
     # For each health center, define the initial compliance rate in the baseline
     # scenario and the implementation scenario and vary diagnostic compliance.
-    initial_compliance = {
-        "NC": (0.097, 0.300),
+
+    compliance_rates = {
+        "NC": {
+            "initial": (0.097, 0.300),
+            "diagnostic": (0.444, 0.688),
+        },
+        # other items
     }
 
-    diagnostic_compliance_rates = {
-        "NC": (0.444, 0.688),
-    }
-
-    FIT_cost_dict = {
-        "Public": 22,
-        # "Patient-Public": 44,
-    }
-
-    Colonoscopy_cost_dict = {
-        "Public": 912,
-        # "Patient-Public": 1437,
+    costs = {
+        "public": {
+            "FIT": 22,
+            "Colonoscopy": 912,
+        },
+        #'Patient-Public": {"FIT": 44, "Colonoscopy": 1437,}
     }
 
     scenarios = []
 
-    for site, screening_rates in initial_compliance.items():
-        for compliance, diagnostic_rate in diagnostic_compliance_rates.items():
-            for cost_category in FIT_cost_dict.keys() & Colonoscopy_cost_dict.keys():
-                IRR = 1.19
-                FIT_cost = FIT_cost_dict[cost_category]
-                Col_cost = Colonoscopy_cost_dict[cost_category]
-                baseline = (
-                    Scenario(
-                        name=f"{site}_{cost_category}_{compliance}_baseline",
-                        params=get_default_params(),
-                    )
-                    .transform(transform_initial_compliance(screening_rates[0]))
-                    .transform(transform_diagnostic_compliance(diagnostic_rate[0]))
-                    .transform(transform_test_cost(Test.FIT, FIT_cost))
-                    .transform(transform_test_cost(Test.COLONOSCOPY, Col_cost))
-                    .transform(transform_lesion_risk_alpha(IRR))
+    for site, rates in compliance_rates.items():
+        for cost_category, test_costs in costs.items():
+            FIT_cost = test_costs["FIT"]
+            Col_cost = test_costs["Colonoscopy"]
+            baseline = (
+                Scenario(
+                    name=f"{site}_{cost_category}_baseline",
+                    params=get_default_params(),
                 )
-                scenarios.append(baseline)
+                .transform(transform_initial_compliance(rates["initial"][0]))
+                .transform(transform_diagnostic_compliance(rates["diagnostic"][0]))
+                .transform(transform_test_cost(Test.FIT, FIT_cost))
+                .transform(transform_test_cost(Test.COLONOSCOPY, Col_cost))
+                .transform(transform_lesion_risk_alpha(IRR.irr.value))
+            )
+            scenarios.append(baseline)
 
-                implementation = (
-                    Scenario(
-                        name=f"{site}_{cost_category}_{compliance}_implementation",
-                        params=get_default_params(),
-                    )
-                    .transform(transform_initial_compliance(screening_rates[1]))
-                    .transform(transform_diagnostic_compliance(diagnostic_rate[1]))
-                    .transform(transform_test_cost(Test.FIT, FIT_cost))
-                    .transform(transform_test_cost(Test.COLONOSCOPY, Col_cost))
-                    .transform(transform_lesion_risk_alpha(IRR))
+            implementation = (
+                Scenario(
+                    name=f"{site}_{cost_category}_implementation",
+                    params=get_default_params(),
                 )
-                scenarios.append(implementation)
+                .transform(transform_initial_compliance(rates["initial"][1]))
+                .transform(transform_diagnostic_compliance(rates["diagnostic"][1]))
+                .transform(transform_test_cost(Test.FIT, FIT_cost))
+                .transform(transform_test_cost(Test.COLONOSCOPY, Col_cost))
+                .transform(transform_lesion_risk_alpha(IRR.irr.value))
+            )
+            scenarios.append(implementation)
 
     # No screening baseline scenario
     no_screening = (
