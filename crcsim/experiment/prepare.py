@@ -1,6 +1,7 @@
 import json
 import random
 from copy import deepcopy
+from enum import Enum, unique
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
@@ -8,6 +9,18 @@ import fire
 
 SEED: int = 49865106
 NUM_ITERATIONS: int = 100
+
+
+@unique
+class Test(Enum):
+    FIT = "FIT"
+    COLONOSCOPY = "Colonoscopy"
+
+
+@unique
+class ConditionalComplianceParam(Enum):
+    PREV_COMPLIANT = "compliance_rate_given_prev_compliant"
+    NOT_PREV_COMPLIANT = "compliance_rate_given_not_prev_compliant"
 
 
 class Scenario:
@@ -104,6 +117,75 @@ def transform_treatment_cost(stage: str, phase: str, cost: float) -> Callable:
 def transform_lesion_risk_alpha(IRR: float) -> Callable:
     def transform(params):
         params["lesion_risk_alpha"] = params["lesion_risk_alpha"] * IRR
+
+    return transform
+
+
+def transform_fit_only() -> Callable:
+    """Transform parameters to use FIT tests only."""
+
+    def transform(params):
+        # Set FIT as the only test
+        params["routine_testing_year"] = list(range(45, 76))  # Ages 45-75
+        params["variable_routine_test"] = ["FIT"] * 31  # FIT for all years
+
+        # Disable other tests by setting their routine ages outside valid range
+        for test_name in params["tests"]:
+            if test_name != "FIT":
+                params["tests"][test_name]["routine_start"] = -1
+                params["tests"][test_name]["routine_end"] = -1
+            else:
+                params["tests"]["FIT"]["routine_start"] = 45
+                params["tests"]["FIT"]["routine_end"] = 75
+
+    return transform
+
+
+def transform_colonoscopy_only() -> Callable:
+    """Transform parameters to use Colonoscopy tests only."""
+
+    def transform(params):
+        # Set FIT as the only test
+        params["routine_testing_year"] = list(range(45, 76))  # Ages 45-75
+        params["variable_routine_test"] = ["Colonoscopy"] * 31  # FIT for all years
+
+        # Disable other tests by setting their routine ages outside valid range
+        for test_name in params["tests"]:
+            if test_name != "Colonoscopy":
+                params["tests"][test_name]["routine_start"] = -1
+                params["tests"][test_name]["routine_end"] = -1
+            else:
+                params["tests"]["Colonoscopy"]["routine_start"] = 45
+                params["tests"]["Colonoscopy"]["routine_end"] = 75
+
+    return transform
+
+
+def transform_conditional_compliance_rates(
+    param: ConditionalComplianceParam, rates: List[float]
+) -> Callable:
+    """
+    Replaces a conditional compliance parameter with a new set of rates.
+    """
+
+    def transform(params):
+        for test in params["tests"]:
+            params["tests"][test][param.value] = rates
+
+    return transform
+
+
+def transform_routine_ages(test: Test, start_age: int, end_age: int) -> Callable:
+    def transform(params):
+        params["tests"][test.value]["routine_start"] = start_age
+        params["tests"][test.value]["routine_end"] = end_age
+
+    return transform
+
+
+def transform_routine_proportion(test: Test, proportion: float) -> Callable:
+    def transform(params):
+        params["tests"][test.value]["proportion"] = proportion
 
     return transform
 
@@ -214,6 +296,55 @@ def create_scenarios() -> List:
                 f"{fqhc}_{compliance}_implementation_extra_low_initial_treat_cost"
             )
             scenarios.append(implementation_extra_low_cost)
+
+    # No screening baseline scenario
+    no_screening = (
+        Scenario(name="no_screening", params=get_default_params())
+        .transform(transform_fit_only())
+        .transform(transform_routine_proportion(Test.FIT, 1.0))
+        .transform(transform_routine_ages(Test.FIT, -1, -1))
+    )
+    scenarios.append(no_screening)
+
+    # Full FIT compliance baseline
+    full_FIT_compliance = (
+        Scenario(name="full_FIT_compliance", params=get_default_params())
+        .transform(transform_fit_only())
+        .transform(transform_routine_proportion(Test.FIT, 1.0))
+        .transform(transform_routine_proportion(Test.COLONOSCOPY, 0.0))
+        .transform(transform_initial_compliance(1.0))
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.PREV_COMPLIANT, [float(1.0)] * 31
+            )
+        )
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(1.0)] * 31
+            )
+        )
+    )
+    scenarios.append(full_FIT_compliance)
+
+    # Full Colonoscopy compliance baseline
+    full_Colonoscopy_compliance = (
+        Scenario(name="full_Colonoscopy_compliance", params=get_default_params())
+        .transform(transform_colonoscopy_only())
+        .transform(transform_routine_proportion(Test.FIT, 0.0))
+        .transform(transform_routine_proportion(Test.COLONOSCOPY, 1.0))
+        .transform(transform_initial_compliance(1.0))
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.PREV_COMPLIANT, [float(1.0)] * 31
+            )
+        )
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(1.0)] * 31
+            )
+        )
+    )
+    scenarios.append(full_Colonoscopy_compliance)
     return scenarios
 
 
