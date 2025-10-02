@@ -1,10 +1,10 @@
-# Experiment: Test 100% and 80% Diagnostic Compliance for FQHCs and No Screening, All FIT, and ALL Colonocscopy
+# Experiment: ACCSIS Runs and No Screening, All FIT, and ALL Colonocscopy
 
-This branch tests 80% and 100% compliance for FQHCs 1-8 with differing screening uptake, differing test costs, and low and extra low costs for Stage III and Stage IV inital treatment. Scenarios for no screening, 100% colonoscopy, and 100% FIT were also added.
+This branch tests ACCSIS inital and diagnostic screening compliance for different sites. Scenarios for no screening, 100% colonoscopy, and 100% FIT were also added to ensure model is running as expected.
 
 ## Results
 
-The results for the 100% diagnostic compliance match a previous run from April 2025. The results differ between 80% and 100% compliance.
+The results for the 100% diagnostic compliance match a previous run from April 2025. Results for NC are included now but more will be added.
 
 ## Experiment Workflow
 
