@@ -1,6 +1,5 @@
 import json
 import random
-from copy import deepcopy
 from enum import Enum, unique
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
@@ -203,10 +202,6 @@ def create_scenarios() -> List:
         "fqhc7": (0.257, 0.354),
         "fqhc8": (0.190, 0.390),
     }
-    low_initial_stage_3_treatment_cost = 67_300
-    low_initial_stage_4_treatment_cost = 97_931
-    extra_low_initial_stage_3_treatment_cost = 50_000
-    extra_low_initial_stage_4_treatment_cost = 80_000
 
     diagnostic_compliance_rates = {
         "100Compliance": 1.0,
@@ -234,68 +229,6 @@ def create_scenarios() -> List:
                 .transform(transform_diagnostic_compliance(diagnostic_rate))
             )
             scenarios.append(implementation)
-
-            # Sensitivity analysis 2. Lower cost for stage III and stage IV initial phase
-            baseline_low_cost = deepcopy(baseline)
-            baseline_low_cost.transform(
-                transform_treatment_cost(
-                    "3", "initial", low_initial_stage_3_treatment_cost
-                )
-            ).transform(
-                transform_treatment_cost(
-                    "4", "initial", low_initial_stage_4_treatment_cost
-                )
-            )
-            baseline_low_cost.name = (
-                f"{fqhc}_{compliance}_baseline_low_initial_treat_cost"
-            )
-            scenarios.append(baseline_low_cost)
-
-            implementation_low_cost = deepcopy(implementation)
-            implementation_low_cost.transform(
-                transform_treatment_cost(
-                    "3", "initial", low_initial_stage_3_treatment_cost
-                )
-            ).transform(
-                transform_treatment_cost(
-                    "4", "initial", low_initial_stage_4_treatment_cost
-                )
-            )
-            implementation_low_cost.name = (
-                f"{fqhc}_{compliance}_implementation_low_initial_treat_cost"
-            )
-            scenarios.append(implementation_low_cost)
-
-            # Sensitivity analysis 2a. Extra low cost for stage III and stage IV initial phase
-            baseline_extra_low_cost = deepcopy(baseline)
-            baseline_extra_low_cost.transform(
-                transform_treatment_cost(
-                    "3", "initial", extra_low_initial_stage_3_treatment_cost
-                )
-            ).transform(
-                transform_treatment_cost(
-                    "4", "initial", extra_low_initial_stage_4_treatment_cost
-                )
-            )
-            baseline_extra_low_cost.name = (
-                f"{fqhc}_{compliance}_baseline_extra_low_initial_treat_cost"
-            )
-            scenarios.append(baseline_extra_low_cost)
-
-            implementation_extra_low_cost = deepcopy(implementation)
-            implementation_extra_low_cost.transform(
-                transform_treatment_cost(
-                    "3", "initial", extra_low_initial_stage_3_treatment_cost
-                )
-            ).transform(
-                transform_treatment_cost(
-                    "4", "initial", extra_low_initial_stage_4_treatment_cost
-                )
-            )
-            implementation_extra_low_cost.name = (
-                f"{fqhc}_{compliance}_implementation_extra_low_initial_treat_cost"
-            )
-            scenarios.append(implementation_extra_low_cost)
 
     # No screening baseline scenario
     no_screening = (
