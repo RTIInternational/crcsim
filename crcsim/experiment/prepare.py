@@ -252,54 +252,70 @@ def create_scenarios() -> List:
                     )
                 )
                 scenarios.append(implementation)
+
+    for (
+        propogation_name,
+        propagation_value,
+    ) in propagate_diagnostic_noncompliance.items():
         # No screening baseline scenario
-    no_screening = (
-        Scenario(name="no_screening", params=get_default_params())
-        .transform(transform_fit_only())
-        .transform(transform_routine_proportion(Test.FIT, 1.0))
-        .transform(transform_routine_ages(Test.FIT, -1, -1))
-    )
-    scenarios.append(no_screening)
+        no_screening = (
+            Scenario(
+                name=f"{propogation_name}_no_screening", params=get_default_params()
+            )
+            .transform(transform_fit_only())
+            .transform(transform_routine_proportion(Test.FIT, 1.0))
+            .transform(transform_routine_ages(Test.FIT, -1, -1))
+            .transform(transform_propagate_diagnostic_noncompliance(propagation_value))
+        )
+        scenarios.append(no_screening)
 
-    # Full FIT compliance baseline
-    full_FIT_compliance = (
-        Scenario(name="full_FIT_compliance", params=get_default_params())
-        .transform(transform_fit_only())
-        .transform(transform_routine_proportion(Test.FIT, 1.0))
-        .transform(transform_routine_proportion(Test.COLONOSCOPY, 0.0))
-        .transform(transform_initial_compliance(1.0))
-        .transform(
-            transform_conditional_compliance_rates(
-                ConditionalComplianceParam.PREV_COMPLIANT, [float(1.0)] * 31
+        # Full FIT compliance baseline
+        full_FIT_compliance = (
+            Scenario(
+                name=f"{propogation_name}_full_FIT_compliance",
+                params=get_default_params(),
             )
-        )
-        .transform(
-            transform_conditional_compliance_rates(
-                ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(1.0)] * 31
+            .transform(transform_fit_only())
+            .transform(transform_routine_proportion(Test.FIT, 1.0))
+            .transform(transform_routine_proportion(Test.COLONOSCOPY, 0.0))
+            .transform(transform_initial_compliance(1.0))
+            .transform(
+                transform_conditional_compliance_rates(
+                    ConditionalComplianceParam.PREV_COMPLIANT, [float(1.0)] * 31
+                )
             )
+            .transform(
+                transform_conditional_compliance_rates(
+                    ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(1.0)] * 31
+                )
+            )
+            .transform(transform_propagate_diagnostic_noncompliance(propagation_value))
         )
-    )
-    scenarios.append(full_FIT_compliance)
+        scenarios.append(full_FIT_compliance)
 
-    # Full Colonoscopy compliance baseline
-    full_Colonoscopy_compliance = (
-        Scenario(name="full_Colonoscopy_compliance", params=get_default_params())
-        .transform(transform_colonoscopy_only())
-        .transform(transform_routine_proportion(Test.FIT, 0.0))
-        .transform(transform_routine_proportion(Test.COLONOSCOPY, 1.0))
-        .transform(transform_initial_compliance(1.0))
-        .transform(
-            transform_conditional_compliance_rates(
-                ConditionalComplianceParam.PREV_COMPLIANT, [float(1.0)] * 31
+        # Full Colonoscopy compliance baseline
+        full_Colonoscopy_compliance = (
+            Scenario(
+                name=f"{propogation_name}_full_Colonoscopy_compliance",
+                params=get_default_params(),
             )
-        )
-        .transform(
-            transform_conditional_compliance_rates(
-                ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(1.0)] * 31
+            .transform(transform_colonoscopy_only())
+            .transform(transform_routine_proportion(Test.FIT, 0.0))
+            .transform(transform_routine_proportion(Test.COLONOSCOPY, 1.0))
+            .transform(transform_initial_compliance(1.0))
+            .transform(
+                transform_conditional_compliance_rates(
+                    ConditionalComplianceParam.PREV_COMPLIANT, [float(1.0)] * 31
+                )
             )
+            .transform(
+                transform_conditional_compliance_rates(
+                    ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(1.0)] * 31
+                )
+            )
+            .transform(transform_propagate_diagnostic_noncompliance(propagation_value))
         )
-    )
-    scenarios.append(full_Colonoscopy_compliance)
+        scenarios.append(full_Colonoscopy_compliance)
     return scenarios
 
 
