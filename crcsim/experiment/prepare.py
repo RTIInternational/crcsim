@@ -1,6 +1,6 @@
 import json
 import random
-from copy import deepcopy
+from enum import Enum, unique
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
@@ -8,6 +8,18 @@ import fire
 
 SEED: int = 49865106
 NUM_ITERATIONS: int = 100
+
+
+@unique
+class Test(Enum):
+    FIT = "FIT"
+    COLONOSCOPY = "Colonoscopy"
+
+
+@unique
+class ConditionalComplianceParam(Enum):
+    PREV_COMPLIANT = "compliance_rate_given_prev_compliant"
+    NOT_PREV_COMPLIANT = "compliance_rate_given_not_prev_compliant"
 
 
 class Scenario:
@@ -115,6 +127,75 @@ def transform_lesion_risk_alpha(IRR: float) -> Callable:
     return transform
 
 
+def transform_fit_only() -> Callable:
+    """Transform parameters to use FIT tests only."""
+
+    def transform(params):
+        # Set FIT as the only test
+        params["routine_testing_year"] = list(range(45, 76))  # Ages 45-75
+        params["variable_routine_test"] = ["FIT"] * 31  # FIT for all years
+
+        # Disable other tests by setting their routine ages outside valid range
+        for test_name in params["tests"]:
+            if test_name != "FIT":
+                params["tests"][test_name]["routine_start"] = -1
+                params["tests"][test_name]["routine_end"] = -1
+            else:
+                params["tests"]["FIT"]["routine_start"] = 45
+                params["tests"]["FIT"]["routine_end"] = 75
+
+    return transform
+
+
+def transform_colonoscopy_only() -> Callable:
+    """Transform parameters to use Colonoscopy tests only."""
+
+    def transform(params):
+        # Set FIT as the only test
+        params["routine_testing_year"] = list(range(45, 76))  # Ages 45-75
+        params["variable_routine_test"] = ["Colonoscopy"] * 31  # FIT for all years
+
+        # Disable other tests by setting their routine ages outside valid range
+        for test_name in params["tests"]:
+            if test_name != "Colonoscopy":
+                params["tests"][test_name]["routine_start"] = -1
+                params["tests"][test_name]["routine_end"] = -1
+            else:
+                params["tests"]["Colonoscopy"]["routine_start"] = 45
+                params["tests"]["Colonoscopy"]["routine_end"] = 75
+
+    return transform
+
+
+def transform_conditional_compliance_rates(
+    param: ConditionalComplianceParam, rates: List[float]
+) -> Callable:
+    """
+    Replaces a conditional compliance parameter with a new set of rates.
+    """
+
+    def transform(params):
+        for test in params["tests"]:
+            params["tests"][test][param.value] = rates
+
+    return transform
+
+
+def transform_routine_ages(test: Test, start_age: int, end_age: int) -> Callable:
+    def transform(params):
+        params["tests"][test.value]["routine_start"] = start_age
+        params["tests"][test.value]["routine_end"] = end_age
+
+    return transform
+
+
+def transform_routine_proportion(test: Test, proportion: float) -> Callable:
+    def transform(params):
+        params["tests"][test.value]["proportion"] = proportion
+
+    return transform
+
+
 def create_scenarios() -> List:
     # For each health center, define the initial compliance rate in the baseline
     # scenario and the implementation scenario and vary diagnostic compliance.
@@ -128,10 +209,6 @@ def create_scenarios() -> List:
         "fqhc7": (0.257, 0.354),
         "fqhc8": (0.190, 0.390),
     }
-    low_initial_stage_3_treatment_cost = 67_300
-    low_initial_stage_4_treatment_cost = 97_931
-    extra_low_initial_stage_3_treatment_cost = 50_000
-    extra_low_initial_stage_4_treatment_cost = 80_000
 
     diagnostic_compliance_rates = {
         "100Compliance": 1.0,
@@ -175,60 +252,54 @@ def create_scenarios() -> List:
                     )
                 )
                 scenarios.append(implementation)
+        # No screening baseline scenario
+    no_screening = (
+        Scenario(name="no_screening", params=get_default_params())
+        .transform(transform_fit_only())
+        .transform(transform_routine_proportion(Test.FIT, 1.0))
+        .transform(transform_routine_ages(Test.FIT, -1, -1))
+    )
+    scenarios.append(no_screening)
 
-                # Sensitivity analysis 2. Lower cost for stage III and stage IV initial phase
-                baseline_low_cost = deepcopy(baseline)
-                baseline_low_cost.transform(
-                    transform_treatment_cost(
-                        "3", "initial", low_initial_stage_3_treatment_cost
-                    )
-                ).transform(
-                    transform_treatment_cost(
-                        "4", "initial", low_initial_stage_4_treatment_cost
-                    )
-                )
-                baseline_low_cost.name = f"{propogation_name}_{fqhc}_{compliance}_baseline_low_initial_treat_cost"
-                scenarios.append(baseline_low_cost)
+    # Full FIT compliance baseline
+    full_FIT_compliance = (
+        Scenario(name="full_FIT_compliance", params=get_default_params())
+        .transform(transform_fit_only())
+        .transform(transform_routine_proportion(Test.FIT, 1.0))
+        .transform(transform_routine_proportion(Test.COLONOSCOPY, 0.0))
+        .transform(transform_initial_compliance(1.0))
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.PREV_COMPLIANT, [float(1.0)] * 31
+            )
+        )
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(1.0)] * 31
+            )
+        )
+    )
+    scenarios.append(full_FIT_compliance)
 
-                implementation_low_cost = deepcopy(implementation)
-                implementation_low_cost.transform(
-                    transform_treatment_cost(
-                        "3", "initial", low_initial_stage_3_treatment_cost
-                    )
-                ).transform(
-                    transform_treatment_cost(
-                        "4", "initial", low_initial_stage_4_treatment_cost
-                    )
-                )
-                implementation_low_cost.name = f"{propogation_name}_{fqhc}_{compliance}_implementation_low_initial_treat_cost"
-                scenarios.append(implementation_low_cost)
-
-                # Sensitivity analysis 2a. Extra low cost for stage III and stage IV initial phase
-                baseline_extra_low_cost = deepcopy(baseline)
-                baseline_extra_low_cost.transform(
-                    transform_treatment_cost(
-                        "3", "initial", extra_low_initial_stage_3_treatment_cost
-                    )
-                ).transform(
-                    transform_treatment_cost(
-                        "4", "initial", extra_low_initial_stage_4_treatment_cost
-                    )
-                )
-                baseline_extra_low_cost.name = f"{propogation_name}_{fqhc}_{compliance}_baseline_extra_low_initial_treat_cost"
-                scenarios.append(baseline_extra_low_cost)
-
-                implementation_extra_low_cost = deepcopy(implementation)
-                implementation_extra_low_cost.transform(
-                    transform_treatment_cost(
-                        "3", "initial", extra_low_initial_stage_3_treatment_cost
-                    )
-                ).transform(
-                    transform_treatment_cost(
-                        "4", "initial", extra_low_initial_stage_4_treatment_cost
-                    )
-                )
-                implementation_extra_low_cost.name = f"{propogation_name}_{fqhc}_{compliance}_implementation_extra_low_initial_treat_cost"
-                scenarios.append(implementation_extra_low_cost)
+    # Full Colonoscopy compliance baseline
+    full_Colonoscopy_compliance = (
+        Scenario(name="full_Colonoscopy_compliance", params=get_default_params())
+        .transform(transform_colonoscopy_only())
+        .transform(transform_routine_proportion(Test.FIT, 0.0))
+        .transform(transform_routine_proportion(Test.COLONOSCOPY, 1.0))
+        .transform(transform_initial_compliance(1.0))
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.PREV_COMPLIANT, [float(1.0)] * 31
+            )
+        )
+        .transform(
+            transform_conditional_compliance_rates(
+                ConditionalComplianceParam.NOT_PREV_COMPLIANT, [float(1.0)] * 31
+            )
+        )
+    )
+    scenarios.append(full_Colonoscopy_compliance)
     return scenarios
 
 
