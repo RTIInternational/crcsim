@@ -12,16 +12,19 @@ from crcsim.combine_tests import combine_tests_in_params, main
 # Alias TestCombiningMethod to keep pytest from treating it as a test class
 from crcsim.enums import TestCombiningMethod as TstCombiningMethod
 
+TEST_A = "TestA"
+TEST_B = "TestB"
+
 
 @pytest.fixture(scope="module")
 def base_params():
     """
-    Minimal test parameters with two simple tests for combination testing.
+    Minimal test parameters with two tests for combination testing.
     """
     return {
-        "routine_tests": ["TestA", "TestB"],
+        "routine_tests": [TEST_A, TEST_B],
         "tests": {
-            "TestA": {
+            TEST_A: {
                 "proportion": 1.0,
                 "routine_start": 50,
                 "routine_end": 75,
@@ -37,7 +40,7 @@ def base_params():
                 "compliance_rate_given_prev_compliant": [1.0, 0.9, 0.8],
                 "compliance_rate_given_not_prev_compliant": [0.5, 0.4, 0.3],
             },
-            "TestB": {
+            TEST_B: {
                 "proportion": 0.0,
                 "routine_start": 45,
                 "routine_end": 80,
@@ -76,10 +79,10 @@ def sens_spec_params():
     [
         {
             "method": TstCombiningMethod.PARALLEL,
-            "expected_sensitivity_polyp1": 0.235,  # 1 - (1-0.10)*(1-0.15)
-            "expected_sensitivity_polyp2": 0.40,  # 1 - (1-0.20)*(1-0.25)
-            "expected_sensitivity_polyp3": 0.58,  # 1 - (1-0.30)*(1-0.40)
-            "expected_sensitivity_cancer": 0.94,  # 1 - (1-0.80)*(1-0.70)
+            "expected_sensitivity_polyp1": 0.235,  # 1 - (1 - 0.10) * (1 - 0.15)
+            "expected_sensitivity_polyp2": 0.40,  # 1 - (1 - 0.20) * (1 - 0.25)
+            "expected_sensitivity_polyp3": 0.58,  # 1 - (1 - 0.30) * (1 - 0.40)
+            "expected_sensitivity_cancer": 0.94,  # 1 - (1 - 0.80) * (1 - 0.70)
             "expected_specificity": 0.855,  # 0.90 * 0.95
         },
         {
@@ -88,13 +91,14 @@ def sens_spec_params():
             "expected_sensitivity_polyp2": 0.05,  # 0.20 * 0.25
             "expected_sensitivity_polyp3": 0.12,  # 0.30 * 0.40
             "expected_sensitivity_cancer": 0.56,  # 0.80 * 0.70
-            "expected_specificity": 0.995,  # 1 - (1-0.90)*(1-0.95)
+            "expected_specificity": 0.995,  # 1 - (1 - 0.90) * (1 - 0.95)
         },
     ],
 )
 def test_sens_spec_combinations(base_params, case, sens_spec_params):
     """
-    Test parallel and serial combinations with hand-calculated values.
+    Test parallel and serial sensitivity and specificity combination with
+    hand-calculated values.
 
     Parallel: either test being positive results in a positive result.
     - Combined sensitivity = 1 - (1 - sens1) * (1 - sens2)
@@ -105,9 +109,9 @@ def test_sens_spec_combinations(base_params, case, sens_spec_params):
     - Combined specificity = 1 - (1 - spec1) * (1 - spec2)
     """
     params = deepcopy(base_params)
-    result = combine_tests_in_params(params, "TestA", "TestB", case["method"])
+    result = combine_tests_in_params(params, TEST_A, TEST_B, case["method"])
 
-    combined_test = result["tests"][f"TestA_TestB_{case['method'].value}"]
+    combined_test = result["tests"][f"{TEST_A}_{TEST_B}_{case['method'].value}"]
 
     for param in sens_spec_params:
         assert combined_test[param] == pytest.approx(case[f"expected_{param}"])
@@ -135,12 +139,12 @@ def test_sens_spec_monotonicity(base_params, method, sens_spec_params):
 
     for val1, val2 in itertools.product(test_values, repeat=2):
         for param in sens_spec_params:
-            params["tests"]["TestA"][param] = val1
-            params["tests"]["TestB"][param] = val2
+            params["tests"][TEST_A][param] = val1
+            params["tests"][TEST_B][param] = val2
 
-        result = combine_tests_in_params(params, "TestA", "TestB", method)
+        result = combine_tests_in_params(params, TEST_A, TEST_B, method)
 
-        combined_test = result["tests"][f"TestA_TestB_{method.value}"]
+        combined_test = result["tests"][f"{TEST_A}_{TEST_B}_{method.value}"]
 
         for param in sens_spec_params:
             combined_value = combined_test[param]
@@ -160,12 +164,12 @@ def test_sens_spec_monotonicity(base_params, method, sens_spec_params):
         {
             "method": TstCombiningMethod.PARALLEL,
             "value": 1.0,
-            "description": "perfect test in parallel combination yields perfect sensitivity",
+            "description": "perfect test in parallel combination should yield perfect sensitivity",
         },
         {
             "method": TstCombiningMethod.SERIAL,
             "value": 0.0,
-            "description": "useless test in serial combination yields zero sensitivity",
+            "description": "useless test in serial combination should yield zero sensitivity",
         },
     ],
 )
@@ -179,10 +183,10 @@ def test_sens_spec_boundary_cases(base_params, case, sens_spec_params):
     params = deepcopy(base_params)
 
     for param in sens_spec_params:
-        params["tests"]["TestA"][param] = case["value"]
+        params["tests"][TEST_A][param] = case["value"]
 
-    result = combine_tests_in_params(params, "TestA", "TestB", case["method"])
-    combined_test = result["tests"][f"TestA_TestB_{case['method'].value}"]
+    result = combine_tests_in_params(params, TEST_A, TEST_B, case["method"])
+    combined_test = result["tests"][f"{TEST_A}_{TEST_B}_{case['method'].value}"]
 
     for param in sens_spec_params:
         if "sensitivity" in param:
@@ -197,9 +201,9 @@ def test_parameter_additions(base_params, method):
     Test that the combined test is properly added to the parameters dictionary.
     """
     params = deepcopy(base_params)
-    result = combine_tests_in_params(params, "TestA", "TestB", method)
+    result = combine_tests_in_params(params, TEST_A, TEST_B, method)
 
-    test_name = f"TestA_TestB_{method.value}"
+    test_name = f"{TEST_A}_{TEST_B}_{method.value}"
 
     # Combined test exists in tests dict
     assert test_name in result["tests"]
@@ -212,16 +216,16 @@ def test_parameter_additions(base_params, method):
 
     # Other test proportions are unchanged
     assert (
-        result["tests"]["TestA"]["proportion"]
-        == base_params["tests"]["TestA"]["proportion"]
+        result["tests"][TEST_A]["proportion"]
+        == base_params["tests"][TEST_A]["proportion"]
     )
     assert (
-        result["tests"]["TestB"]["proportion"]
-        == base_params["tests"]["TestB"]["proportion"]
+        result["tests"][TEST_B]["proportion"]
+        == base_params["tests"][TEST_B]["proportion"]
     )
 
     # All base tests params exist for combined test
-    for param in base_params["tests"]["TestA"]:
+    for param in base_params["tests"][TEST_A]:
         assert param in result["tests"][test_name]
 
 
@@ -230,7 +234,7 @@ def test_parameter_additions(base_params, method):
 )
 def test_other_combinations(base_params, method):
     """
-    Tests logic of combinations other than sensitivity and specificity.
+    Test logic of combinations other than sensitivity and specificity.
 
       - Combined costs are the sum of individual costs.
       - Combined perforation probability is the sum of individual probabilities.
@@ -238,43 +242,43 @@ def test_other_combinations(base_params, method):
       - Combined conditional compliance rates use element-wise minimum.
     """
     params = deepcopy(base_params)
-    result = combine_tests_in_params(params, "TestA", "TestB", method)
+    result = combine_tests_in_params(params, TEST_A, TEST_B, method)
 
-    combined_test = result["tests"][f"TestA_TestB_{method.value}"]
+    combined_test = result["tests"][f"{TEST_A}_{TEST_B}_{method.value}"]
 
     # Combined costs are the sum of individual costs
     assert (
         combined_test["cost"]
-        == params["tests"]["TestA"]["cost"] + params["tests"]["TestB"]["cost"]
+        == params["tests"][TEST_A]["cost"] + params["tests"][TEST_B]["cost"]
     )
     assert (
         combined_test["cost_perforation"]
-        == params["tests"]["TestA"]["cost_perforation"]
-        + params["tests"]["TestB"]["cost_perforation"]
+        == params["tests"][TEST_A]["cost_perforation"]
+        + params["tests"][TEST_B]["cost_perforation"]
     )
 
     # Perforation probability is the sum of individual probabilities
     assert (
         combined_test["proportion_perforation"]
-        == params["tests"]["TestA"]["proportion_perforation"]
-        + params["tests"]["TestB"]["proportion_perforation"]
+        == params["tests"][TEST_A]["proportion_perforation"]
+        + params["tests"][TEST_B]["proportion_perforation"]
     )
 
-    # Start age should be min of base tests
+    # Start age is the min of base tests
     assert combined_test["routine_start"] == min(
-        params["tests"]["TestA"]["routine_start"],
-        params["tests"]["TestB"]["routine_start"],
+        params["tests"][TEST_A]["routine_start"],
+        params["tests"][TEST_B]["routine_start"],
     )
 
-    # End age should be max of base tests
+    # End age is the max of base tests
     assert combined_test["routine_end"] == max(
-        params["tests"]["TestA"]["routine_end"], params["tests"]["TestB"]["routine_end"]
+        params["tests"][TEST_A]["routine_end"], params["tests"][TEST_B]["routine_end"]
     )
 
-    # Test frequency should be min of base tests
+    # Test frequency is the min of base tests
     assert combined_test["routine_freq"] == min(
-        params["tests"]["TestA"]["routine_freq"],
-        params["tests"]["TestB"]["routine_freq"],
+        params["tests"][TEST_A]["routine_freq"],
+        params["tests"][TEST_B]["routine_freq"],
     )
 
     # Conditional compliance rates use element-wise minimum.
@@ -283,8 +287,8 @@ def test_other_combinations(base_params, method):
         assert (
             combined_test[f"compliance_rate_given_{condition}"]
             == np.minimum(
-                params["tests"]["TestA"][f"compliance_rate_given_{condition}"],
-                params["tests"]["TestB"][f"compliance_rate_given_{condition}"],
+                params["tests"][TEST_A][f"compliance_rate_given_{condition}"],
+                params["tests"][TEST_B][f"compliance_rate_given_{condition}"],
             ).tolist()
         )
 
@@ -292,32 +296,26 @@ def test_other_combinations(base_params, method):
 @pytest.mark.parametrize(
     "method", [TstCombiningMethod.PARALLEL, TstCombiningMethod.SERIAL]
 )
-def test_missing_test_raises_error(base_params, method):
+def test_missing_test(base_params, method):
     """
     Test that ValueError is raised when one of the passed tests doesn't exist.
     """
-    with pytest.raises(
-        ValueError, match="Test 'NonexistentTest' not found in parameters"
-    ):
-        combine_tests_in_params(base_params, "NonexistentTest", "TestB", method)
+    nonexistent_test = "NonexistentTest"
 
     with pytest.raises(
-        ValueError, match="Test 'NonexistentTest' not found in parameters"
+        ValueError, match=f"Test '{nonexistent_test}' not found in parameters"
     ):
-        combine_tests_in_params(base_params, "TestA", "NonexistentTest", method)
+        combine_tests_in_params(base_params, nonexistent_test, TEST_B, method)
 
-
-def test_param_file_not_found():
-    """
-    Test that main() raises FileNotFoundError when parameter file doesn't exist.
-    """
-    with pytest.raises(FileNotFoundError, match="Parameters file not found"):
-        main("nonexistent_file.json", "TestA", "TestB")
+    with pytest.raises(
+        ValueError, match=f"Test '{nonexistent_test}' not found in parameters"
+    ):
+        combine_tests_in_params(base_params, TEST_A, nonexistent_test, method)
 
 
 def test_output_file(base_params):
     """
-    Test that main() creates an output file with correct name.
+    Test that main() creates an output file with correct name and contents.
     """
     with TemporaryDirectory() as tmp_dir:
         # Dump base params into input parameter file
@@ -327,7 +325,7 @@ def test_output_file(base_params):
 
         # Default output file: run main without specifying name
         # Check that output file exists and contains correct combined test
-        main(str(input_path), "TestA", "TestB", "parallel")
+        main(str(input_path), TEST_A, TEST_B, "parallel")
 
         expected_output = (
             Path(tmp_dir) / "parameters_combined_TestA_TestB_parallel.json"
@@ -340,7 +338,7 @@ def test_output_file(base_params):
 
         # Custom output filename, same checks as previous
         output_path = Path(tmp_dir) / "custom_output.json"
-        main(str(input_path), "TestA", "TestB", "serial", str(output_path))
+        main(str(input_path), TEST_A, TEST_B, "serial", str(output_path))
 
         assert output_path.exists()
 
@@ -361,17 +359,15 @@ def test_main_misuse(base_params):
 
         # Invalid combination method
         with pytest.raises(ValueError, match="is not a valid TestCombiningMethod"):
-            main(str(input_path), "TestA", "TestB", "Parallel")  # Case-sensitive
+            main(str(input_path), TEST_A, TEST_B, "Parallel")  # Case-sensitive
 
         # Invalid output path - directory doesn't exist
         # (Add this dir to your system if you want the test to fail!)
         invalid_output_path = Path(tmp_dir) / "super_fake_dir" / "output.json"
         with pytest.raises(FileNotFoundError):
-            main(
-                str(input_path), "TestA", "TestB", "parallel", str(invalid_output_path)
-            )
+            main(str(input_path), TEST_A, TEST_B, "parallel", str(invalid_output_path))
 
         # Invalid input path - file doesn't exist
         nonexistent_input_path = Path(tmp_dir) / "there_is_no.json"
         with pytest.raises(FileNotFoundError, match="Parameters file not found"):
-            main(str(nonexistent_input_path), "TestA", "TestB", "parallel")
+            main(str(nonexistent_input_path), TEST_A, TEST_B, "parallel")
