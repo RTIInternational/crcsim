@@ -157,3 +157,9 @@ class Sex(Enum):
     FEMALE = "female"
     MALE = "male"
     OTHER = "other"
+
+
+@unique
+class TestCombiningMethod(str, Enum):
+    SERIAL = "serial"
+    PARALLEL = "parallel"
