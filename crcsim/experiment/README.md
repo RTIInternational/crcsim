@@ -6,6 +6,10 @@ This branch is a template for `crcsim` experiments. It can be used as a starting
 
 Test the combination of FIT and blood tests in parallel and serial.
 
+## Experiment Results
+
+FIT + blood in parallel leads to less CRC and more diagnostic tests (ie, positive screenings) than either test alone. FIT + blood in serial leads to more CRC and fewer diagnostic tests than either test alone.
+
 ## Experiment Workflow
 
 `crcsim` experiments are managed as branches. We never merge experiment branches into main. Instead, each experiment branch has all relevant files in the `crcsim/experiment` directory, and is kept as a separate branch for historical record.
