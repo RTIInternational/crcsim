@@ -210,7 +210,18 @@ def create_scenarios() -> List:
             "initial": (0.097, 0.300),
             "diagnostic": (0.444, 0.688),
         },
-        # other items
+        "APP": {
+            "initial": (0.439, 0.529),
+            "diagnostic": (0.6, 0.6),
+        },
+        "OR": {
+            "initial": (0.045, 0.118),
+            "diagnostic": (0.15, 0.43),
+        },
+        "CHI": {
+            "initial": (0.403, 0.483),
+            "diagnostic": (0.6, 0.6),
+        },
     }
 
     costs = {

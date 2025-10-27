@@ -4,7 +4,7 @@ This branch tests ACCSIS inital and diagnostic screening compliance for differen
 
 ## Results
 
-The results for the 100% diagnostic compliance match a previous run from April 2025. Results for NC are included now but more will be added.
+The results are for 100% FIT and differing diagnostic anf initial compliance with public cost. Results for North Carolina, Appalachia, Oregon, and Chicago are included now.
 
 ## Experiment Workflow
 
