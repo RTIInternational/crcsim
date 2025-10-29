@@ -27,11 +27,6 @@ class Test(Enum):
 
 
 @unique
-class IRR(Enum):
-    irr = 1.19
-
-
-@unique
 class ConditionalComplianceParam(Enum):
     PREV_COMPLIANT = "compliance_rate_given_prev_compliant"
     NOT_PREV_COMPLIANT = "compliance_rate_given_not_prev_compliant"
@@ -236,8 +231,9 @@ def create_scenarios() -> List:
 
     for site, rates in compliance_rates.items():
         for cost_category, test_costs in costs.items():
-            FIT_cost = test_costs["FIT"]
-            Col_cost = test_costs["Colonoscopy"]
+            fit_cost = test_costs["FIT"]
+            col_cost = test_costs["Colonoscopy"]
+            irr = 1.19
             baseline = (
                 Scenario(
                     name=f"{site}_{cost_category}_baseline",
@@ -245,9 +241,9 @@ def create_scenarios() -> List:
                 )
                 .transform(transform_initial_compliance(rates["initial"][0]))
                 .transform(transform_diagnostic_compliance(rates["diagnostic"][0]))
-                .transform(transform_test_cost(Test.FIT, FIT_cost))
-                .transform(transform_test_cost(Test.COLONOSCOPY, Col_cost))
-                .transform(transform_lesion_risk_alpha(IRR.irr.value))
+                .transform(transform_test_cost(Test.FIT, fit_cost))
+                .transform(transform_test_cost(Test.COLONOSCOPY, col_cost))
+                .transform(transform_lesion_risk_alpha(irr))
             )
             scenarios.append(baseline)
 
@@ -258,9 +254,9 @@ def create_scenarios() -> List:
                 )
                 .transform(transform_initial_compliance(rates["initial"][1]))
                 .transform(transform_diagnostic_compliance(rates["diagnostic"][1]))
-                .transform(transform_test_cost(Test.FIT, FIT_cost))
-                .transform(transform_test_cost(Test.COLONOSCOPY, Col_cost))
-                .transform(transform_lesion_risk_alpha(IRR.irr.value))
+                .transform(transform_test_cost(Test.FIT, fit_cost))
+                .transform(transform_test_cost(Test.COLONOSCOPY, col_cost))
+                .transform(transform_lesion_risk_alpha(irr))
             )
             scenarios.append(implementation)
 
